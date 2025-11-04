@@ -27,3 +27,6 @@ build/
 *.AppImage
 *.deb
 *.zip
+
+# Temp files
+tmp/
