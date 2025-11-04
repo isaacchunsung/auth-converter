@@ -1,0 +1,23 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
+// 안전한 API를 window 객체에 노출
+contextBridge.exposeInMainWorld('electronAPI', {
+  // 파일 열기 이벤트 리스너
+  onOpenJsonFile: (callback) => {
+    ipcRenderer.on('open-json-file', (event, data) => {
+      callback(data);
+    });
+  },
+
+  // 빌드 요청
+  buildApp: () => {
+    return ipcRenderer.invoke('build-app');
+  },
+
+  // 빌드 진행 상황 리스너
+  onBuildProgress: (callback) => {
+    ipcRenderer.on('build-progress', (event, data) => {
+      callback(data);
+    });
+  }
+});

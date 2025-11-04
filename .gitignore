@@ -1,0 +1,29 @@
+# Node modules
+node_modules/
+
+# Upload directory
+uploads/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Electron
+dist/
+build/
+*.dmg
+*.exe
+*.AppImage
+*.deb
+*.zip
