@@ -1,7 +1,7 @@
 {
   "name": "json-viewer",
   "version": "1.0.0",
-  "description": "JSON file viewer with easy copy functionality",
+  "description": "JSON file viewer and MCP server configuration merger - Ver 1.0 (2025-11-04)",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -16,9 +16,13 @@
     "json",
     "viewer",
     "copy",
-    "electron"
+    "electron",
+    "mcp",
+    "server",
+    "merger",
+    "configuration"
   ],
-  "author": "",
+  "author": "CS",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",

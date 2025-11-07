@@ -75,6 +75,62 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   }
 });
 
+// Merge MCP servers
+app.post('/api/merge-mcp', (req, res) => {
+  try {
+    const { existingConfig, newServers, serverNameMap } = req.body;
+
+    if (!existingConfig || !newServers) {
+      return res.status(400).json({
+        success: false,
+        error: 'existingConfig와 newServers가 필요합니다'
+      });
+    }
+
+    // Parse JSON strings if needed
+    const existing = typeof existingConfig === 'string'
+      ? JSON.parse(existingConfig)
+      : existingConfig;
+    const newSrvs = typeof newServers === 'string'
+      ? JSON.parse(newServers)
+      : newServers;
+
+    // Determine if we're working with mcpServers wrapper or direct servers
+    let existingServers = existing.mcpServers || existing;
+    let serversToAdd = newSrvs.mcpServers || newSrvs;
+
+    // Apply server name mapping if provided
+    if (serverNameMap && Object.keys(serverNameMap).length > 0) {
+      const renamedServers = {};
+      Object.keys(serversToAdd).forEach(oldName => {
+        const newName = serverNameMap[oldName] || oldName;
+        renamedServers[newName] = serversToAdd[oldName];
+      });
+      serversToAdd = renamedServers;
+    }
+
+    // Merge servers (new servers will override existing ones with same name)
+    const mergedServers = { ...existingServers, ...serversToAdd };
+
+    // Prepare result with same structure as input
+    let result;
+    if (existing.mcpServers) {
+      result = { mcpServers: mergedServers };
+    } else {
+      result = mergedServers;
+    }
+
+    res.json({
+      success: true,
+      data: result,
+      addedServers: Object.keys(serversToAdd),
+      totalServers: Object.keys(mergedServers).length
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   const isElectron = process.env.ELECTRON_MODE === 'true';
 

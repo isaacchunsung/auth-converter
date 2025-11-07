@@ -141,8 +141,8 @@ function createWindow() {
             dialog.showMessageBox(mainWindow, {
               type: 'info',
               title: 'About JSON Viewer by CS',
-              message: 'JSON Viewer by CS v1.0.0',
-              detail: 'A simple and elegant JSON file viewer with copy and export functionality.\n\nDeveloped by CS'
+              message: 'JSON Viewer by CS',
+              detail: 'Version 1.0\nRelease Date: 2025-11-04\n\nA powerful JSON viewer and MCP server configuration merger.\n\nFeatures:\n- JSON parsing and viewing\n- File upload support\n- MCP server merger with rename capability\n- Export to JSON and Markdown\n\nDeveloped by CS'
             });
           }
         }

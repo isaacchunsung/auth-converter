@@ -356,6 +356,176 @@
       background: #f8d7da;
       color: #721c24;
     }
+
+    .refresh-btn {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .refresh-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .refresh-btn:active {
+      transform: translateY(0);
+    }
+
+    .header-controls {
+      display: flex;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+    }
+
+    .help-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: 10px;
+    }
+
+    .help-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .help-btn:active {
+      transform: translateY(0);
+    }
+
+    .version-info {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      margin-top: 10px;
+      font-weight: 300;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      animation: fadeIn 0.3s;
+    }
+
+    .modal-content {
+      background: white;
+      margin: 50px auto;
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.3s;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-close {
+      color: #aaa;
+      float: right;
+      font-size: 32px;
+      font-weight: bold;
+      line-height: 20px;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    .modal-close:hover {
+      color: #667eea;
+    }
+
+    .modal-content h2 {
+      color: #667eea;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .modal-content h3 {
+      color: #764ba2;
+      margin-top: 25px;
+      margin-bottom: 15px;
+    }
+
+    .modal-content p, .modal-content li {
+      line-height: 1.8;
+      color: #333;
+    }
+
+    .modal-content ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+    }
+
+    .feature-box {
+      background: #f8f9ff;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      border-left: 4px solid #667eea;
+    }
+
+    .feature-box h4 {
+      color: #667eea;
+      margin: 0 0 10px 0;
+    }
+
+    .feature-box p {
+      margin: 5px 0;
+    }
   </style>
 </head>
 <body>
@@ -363,6 +533,11 @@
     <div class="header">
       <h1>📋 JSON Viewer by CS</h1>
       <p>JSON 파일을 보기 좋게 표시하고 값을 쉽게 복사하세요</p>
+      <div class="version-info">Ver 1.0 | 2025-11-04</div>
+      <div class="header-controls">
+        <button class="refresh-btn" onclick="resetApp()">🔄 앱 초기화</button>
+        <button class="help-btn" onclick="openHelp()">📖 사용 설명서</button>
+      </div>
     </div>
 
     <div class="build-section">
@@ -376,6 +551,7 @@
       <div class="tabs">
         <button class="tab active" onclick="switchTab('paste')">텍스트 입력</button>
         <button class="tab" onclick="switchTab('upload')">파일 업로드</button>
+        <button class="tab" onclick="switchTab('mcp')">MCP Merger</button>
       </div>
 
       <div id="paste-tab" class="tab-content active">
@@ -391,6 +567,29 @@
             <p>JSON 파일을 선택하거나 드래그하세요</p>
           </div>
         </div>
+      </div>
+
+      <div id="mcp-tab" class="tab-content">
+        <h3 style="color: #667eea; margin-bottom: 15px;">🔗 MCP Server Merger</h3>
+        <p style="color: #666; margin-bottom: 20px;">기존 MCP 설정에 새로운 서버를 추가합니다</p>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">기존 MCP 설정 JSON:</label>
+          <textarea id="existingMcpInput" placeholder='{"mcpServers": {"server1": {...}}}' style="min-height: 150px;"></textarea>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">추가할 MCP 서버 JSON:</label>
+          <textarea id="newMcpInput" placeholder='{"server2": {"command": "...", "args": [...]}}' style="min-height: 150px;"></textarea>
+        </div>
+
+        <div id="serverNameSection" style="margin-bottom: 20px; display: none;">
+          <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">서버명 변경 (선택사항):</label>
+          <div id="serverNameMapping" style="background: #f5f5f5; padding: 15px; border-radius: 8px;"></div>
+        </div>
+
+        <button class="btn" onclick="analyzeMcpServers()">서버 분석</button>
+        <button class="btn" onclick="mergeMcpServers()" id="mergeBtn" style="display: none;">병합 실행</button>
       </div>
 
       <div class="error-message" id="errorMessage"></div>
@@ -409,6 +608,87 @@
     </div>
   </div>
 
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeHelp()">&times;</span>
+      <h2>📖 JSON Viewer by CS 사용 설명서</h2>
+
+      <div class="feature-box">
+        <h4>📋 1. 텍스트 입력 탭</h4>
+        <p><strong>용도:</strong> JSON 텍스트를 직접 입력하여 파싱합니다.</p>
+        <p><strong>사용법:</strong></p>
+        <ul>
+          <li>텍스트 영역에 JSON 데이터를 붙여넣기 또는 입력</li>
+          <li>"JSON 파싱" 버튼 클릭</li>
+          <li>결과 섹션에서 키-값 쌍을 확인하고 개별 복사 가능</li>
+        </ul>
+      </div>
+
+      <div class="feature-box">
+        <h4>📁 2. 파일 업로드 탭</h4>
+        <p><strong>용도:</strong> JSON 파일을 업로드하여 파싱합니다.</p>
+        <p><strong>사용법:</strong></p>
+        <ul>
+          <li>파일 선택 영역 클릭 또는 파일 드래그 앤 드롭</li>
+          <li>.json 파일만 업로드 가능</li>
+          <li>자동으로 파싱되어 결과 표시</li>
+        </ul>
+      </div>
+
+      <div class="feature-box">
+        <h4>🔗 3. MCP Merger 탭</h4>
+        <p><strong>용도:</strong> 기존 MCP 서버 설정에 새로운 서버를 추가합니다.</p>
+        <p><strong>사용법:</strong></p>
+        <ul>
+          <li><strong>기존 MCP 설정 JSON</strong> 입력 (현재 설정 파일 내용)</li>
+          <li><strong>추가할 MCP 서버 JSON</strong> 입력 (새로 추가할 서버들)</li>
+          <li>"서버 분석" 버튼 클릭</li>
+          <li>필요시 서버명 변경 (중복 방지 또는 원하는 이름으로)</li>
+          <li>"병합 실행" 버튼 클릭</li>
+          <li>병합된 결과를 다운로드, 복사, 또는 미리보기</li>
+        </ul>
+        <p><strong>주요 기능:</strong></p>
+        <ul>
+          <li>서버명 변경: 각 서버의 이름을 원하는 대로 변경 가능</li>
+          <li>JSON 다운로드: 병합된 설정을 JSON 파일로 저장</li>
+          <li>JSON 복사: 클립보드에 복사하여 바로 사용</li>
+          <li>병합 결과 보기: 전체 JSON을 미리보기로 확인</li>
+        </ul>
+      </div>
+
+      <h3>🛠️ 공통 기능</h3>
+      <ul>
+        <li><strong>검색:</strong> 결과 섹션에서 키 또는 값으로 검색 가능</li>
+        <li><strong>개별 복사:</strong> 각 값 옆의 "복사" 버튼으로 클립보드에 복사</li>
+        <li><strong>MD 파일 저장:</strong> 전체 결과를 마크다운 형식으로 다운로드</li>
+        <li><strong>앱 초기화:</strong> 모든 입력과 결과를 한 번에 초기화</li>
+      </ul>
+
+      <h3>🚀 앱 빌드</h3>
+      <p>개발자용 기능으로, 현재 앱을 DMG 파일로 빌드하여 macOS 애플리케이션으로 배포할 수 있습니다.</p>
+      <ul>
+        <li>"빌드 및 DMG 생성" 버튼 클릭</li>
+        <li>빌드 완료 후 dist 폴더가 자동으로 열림</li>
+        <li>생성된 DMG 파일을 설치하여 독립 실행형 앱으로 사용</li>
+      </ul>
+
+      <h3>💡 팁</h3>
+      <ul>
+        <li>큰 JSON 파일도 처리 가능 (최대 50MB)</li>
+        <li>중첩된 객체는 자동으로 평탄화되어 표시됩니다 (예: parent.child.value)</li>
+        <li>MCP 설정은 mcpServers wrapper가 있거나 없어도 자동 인식</li>
+        <li>Electron 앱으로 실행 시 파일 더블클릭으로 바로 열기 가능</li>
+      </ul>
+
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e0e0e0; text-align: center; color: #666;">
+        <p><strong>JSON Viewer by CS</strong></p>
+        <p>Version 1.0 | 2025-11-04</p>
+        <p>Developed by CS</p>
+      </div>
+    </div>
+  </div>
+
   <script>
     let currentData = null;
 
@@ -417,11 +697,14 @@
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
       if (tab === 'paste') {
-        document.querySelector('.tab:first-child').classList.add('active');
+        document.querySelector('.tab:nth-child(1)').classList.add('active');
         document.getElementById('paste-tab').classList.add('active');
-      } else {
-        document.querySelector('.tab:last-child').classList.add('active');
+      } else if (tab === 'upload') {
+        document.querySelector('.tab:nth-child(2)').classList.add('active');
         document.getElementById('upload-tab').classList.add('active');
+      } else if (tab === 'mcp') {
+        document.querySelector('.tab:nth-child(3)').classList.add('active');
+        document.getElementById('mcp-tab').classList.add('active');
       }
     }
 
@@ -720,6 +1003,345 @@
       buildStatus.className = 'build-status show ' + status;
       buildStatus.textContent = message;
     }
+
+    // MCP Merger functions
+    let mcpServerNameMap = {};
+    let mergedMcpData = null;
+
+    function analyzeMcpServers() {
+      const existingInput = document.getElementById('existingMcpInput').value.trim();
+      const newInput = document.getElementById('newMcpInput').value.trim();
+
+      if (!existingInput || !newInput) {
+        showError('기존 MCP 설정과 추가할 서버 JSON을 모두 입력하세요');
+        return;
+      }
+
+      try {
+        const existing = JSON.parse(existingInput);
+        const newServers = JSON.parse(newInput);
+
+        // Extract server names from new servers
+        const serversToAdd = newServers.mcpServers || newServers;
+        const serverNames = Object.keys(serversToAdd);
+
+        if (serverNames.length === 0) {
+          showError('추가할 서버가 없습니다');
+          return;
+        }
+
+        // Show server name mapping section
+        const serverNameSection = document.getElementById('serverNameSection');
+        const serverNameMapping = document.getElementById('serverNameMapping');
+
+        serverNameMapping.innerHTML = serverNames.map(name => `
+          <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+            <span style="min-width: 150px; font-weight: bold;">${escapeHtml(name)}:</span>
+            <input type="text"
+                   id="rename-${escapeHtml(name)}"
+                   value="${escapeHtml(name)}"
+                   placeholder="새 서버명 (선택사항)"
+                   style="flex: 1; padding: 8px; border: 2px solid #e0e0e0; border-radius: 5px;">
+          </div>
+        `).join('');
+
+        serverNameSection.style.display = 'block';
+        document.getElementById('mergeBtn').style.display = 'inline-block';
+
+        // Initialize name map
+        mcpServerNameMap = {};
+        serverNames.forEach(name => {
+          mcpServerNameMap[name] = name;
+        });
+
+      } catch (error) {
+        showError('JSON 파싱 오류: ' + error.message);
+      }
+    }
+
+    function mergeMcpServers() {
+      const existingInput = document.getElementById('existingMcpInput').value.trim();
+      const newInput = document.getElementById('newMcpInput').value.trim();
+
+      if (!existingInput || !newInput) {
+        showError('기존 MCP 설정과 추가할 서버 JSON을 모두 입력하세요');
+        return;
+      }
+
+      try {
+        // Collect server name mappings
+        const serverNameMap = {};
+        Object.keys(mcpServerNameMap).forEach(oldName => {
+          const inputElement = document.getElementById('rename-' + oldName);
+          if (inputElement) {
+            const newName = inputElement.value.trim();
+            if (newName && newName !== oldName) {
+              serverNameMap[oldName] = newName;
+            }
+          }
+        });
+
+        fetch('/api/merge-mcp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            existingConfig: existingInput,
+            newServers: newInput,
+            serverNameMap: serverNameMap
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Store merged data
+            mergedMcpData = data.data;
+
+            // Display the merged result
+            displayJSON(data.data);
+
+            // Show success message with stats
+            const stats = `
+              추가된 서버: ${data.addedServers.join(', ')}
+              전체 서버 수: ${data.totalServers}
+            `;
+
+            // Add info to result section
+            const resultSection = document.getElementById('resultSection');
+            const existingInfo = resultSection.querySelector('.mcp-info');
+            if (existingInfo) {
+              existingInfo.remove();
+            }
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'mcp-info';
+            infoDiv.style.cssText = 'background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #1565c0;';
+            infoDiv.innerHTML = `
+              <h4 style="margin: 0 0 10px 0;">✓ MCP 서버 병합 완료</h4>
+              <p style="margin: 5px 0;"><strong>추가된 서버:</strong> ${data.addedServers.join(', ')}</p>
+              <p style="margin: 5px 0;"><strong>전체 서버 수:</strong> ${data.totalServers}</p>
+              <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn" onclick="downloadMergedJson()">📥 JSON 다운로드</button>
+                <button class="btn" onclick="copyMergedJson()" id="copyMergedBtn">📋 JSON 복사</button>
+                <button class="btn-secondary" onclick="toggleMergedPreview()" id="togglePreviewBtn">👁️ 병합 결과 보기</button>
+              </div>
+              <div id="mergedPreview" style="display: none; margin-top: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #667eea;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h5 style="margin: 0; color: #667eea;">병합된 JSON:</h5>
+                    <button class="copy-btn" onclick="copyMergedJsonFromPreview()" id="copyPreviewBtn">복사</button>
+                  </div>
+                  <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 400px; margin: 0;"><code id="mergedJsonCode" style="font-family: 'Courier New', monospace; font-size: 13px; color: #333;"></code></pre>
+                </div>
+              </div>
+            `;
+
+            resultSection.insertBefore(infoDiv, resultSection.querySelector('.export-section'));
+
+            // Set the JSON code
+            document.getElementById('mergedJsonCode').textContent = JSON.stringify(mergedMcpData, null, 2);
+
+          } else {
+            showError('병합 오류: ' + data.error);
+          }
+        })
+        .catch(error => showError('오류: ' + error.message));
+      } catch (error) {
+        showError('JSON 파싱 오류: ' + error.message);
+      }
+    }
+
+    function downloadMergedJson() {
+      if (!mergedMcpData) {
+        showError('병합된 데이터가 없습니다');
+        return;
+      }
+
+      const jsonString = JSON.stringify(mergedMcpData, null, 2);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      const filename = `merged-mcp-config-${timestamp}.json`;
+
+      downloadFile(jsonString, filename, 'application/json');
+    }
+
+    function copyMergedJson() {
+      if (!mergedMcpData) {
+        showError('병합된 데이터가 없습니다');
+        return;
+      }
+
+      const jsonString = JSON.stringify(mergedMcpData, null, 2);
+      const btn = document.getElementById('copyMergedBtn');
+      const originalText = btn ? btn.textContent : null;
+
+      navigator.clipboard.writeText(jsonString).then(() => {
+        if (btn) {
+          btn.textContent = '✓ 복사됨!';
+          btn.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+          }, 2000);
+        }
+      }).catch(err => {
+        showError('복사 실패: ' + err.message);
+      });
+    }
+
+    function toggleMergedPreview() {
+      const preview = document.getElementById('mergedPreview');
+      const btn = document.getElementById('togglePreviewBtn');
+
+      if (preview && btn) {
+        if (preview.style.display === 'none') {
+          preview.style.display = 'block';
+          btn.textContent = '👁️ 병합 결과 숨기기';
+        } else {
+          preview.style.display = 'none';
+          btn.textContent = '👁️ 병합 결과 보기';
+        }
+      }
+    }
+
+    function copyMergedJsonFromPreview() {
+      if (!mergedMcpData) {
+        showError('병합된 데이터가 없습니다');
+        return;
+      }
+
+      const jsonString = JSON.stringify(mergedMcpData, null, 2);
+      const btn = document.getElementById('copyPreviewBtn');
+      const originalText = btn ? btn.textContent : null;
+
+      navigator.clipboard.writeText(jsonString).then(() => {
+        if (btn) {
+          btn.textContent = '복사됨!';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+      }).catch(err => {
+        showError('복사 실패: ' + err.message);
+      });
+    }
+
+    function resetApp() {
+      // Confirm with user
+      if (!confirm('모든 입력과 결과가 초기화됩니다. 계속하시겠습니까?')) {
+        return;
+      }
+
+      // Clear all input fields
+      document.getElementById('jsonInput').value = '';
+      document.getElementById('existingMcpInput').value = '';
+      document.getElementById('newMcpInput').value = '';
+
+      // Reset file input
+      const fileInput = document.getElementById('fileInput');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+
+      // Hide result section
+      const resultSection = document.getElementById('resultSection');
+      if (resultSection) {
+        resultSection.classList.remove('show');
+      }
+
+      // Clear result content
+      const jsonResult = document.getElementById('jsonResult');
+      if (jsonResult) {
+        jsonResult.innerHTML = '';
+      }
+
+      // Hide error messages
+      const errorMessage = document.getElementById('errorMessage');
+      if (errorMessage) {
+        errorMessage.classList.remove('show');
+      }
+
+      // Reset MCP variables
+      currentData = null;
+      mergedMcpData = null;
+      mcpServerNameMap = {};
+
+      // Hide MCP server name section
+      const serverNameSection = document.getElementById('serverNameSection');
+      if (serverNameSection) {
+        serverNameSection.style.display = 'none';
+      }
+
+      // Hide merge button
+      const mergeBtn = document.getElementById('mergeBtn');
+      if (mergeBtn) {
+        mergeBtn.style.display = 'none';
+      }
+
+      // Clear server name mapping
+      const serverNameMapping = document.getElementById('serverNameMapping');
+      if (serverNameMapping) {
+        serverNameMapping.innerHTML = '';
+      }
+
+      // Reset file upload label
+      const uploadLabel = document.querySelector('.file-upload-label p:last-child');
+      if (uploadLabel) {
+        uploadLabel.textContent = 'JSON 파일을 선택하거나 드래그하세요';
+      }
+
+      // Clear search box
+      const searchBox = document.getElementById('searchBox');
+      if (searchBox) {
+        searchBox.value = '';
+      }
+
+      // Switch to first tab
+      switchTab('paste');
+
+      // Show success message briefly
+      const tempMessage = document.createElement('div');
+      tempMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; animation: fadeIn 0.3s;';
+      tempMessage.textContent = '✓ 앱이 초기화되었습니다';
+      document.body.appendChild(tempMessage);
+
+      setTimeout(() => {
+        tempMessage.style.animation = 'fadeOut 0.3s';
+        setTimeout(() => {
+          document.body.removeChild(tempMessage);
+        }, 300);
+      }, 2000);
+    }
+
+    // Help Modal functions
+    function openHelp() {
+      const modal = document.getElementById('helpModal');
+      if (modal) {
+        modal.style.display = 'block';
+      }
+    }
+
+    function closeHelp() {
+      const modal = document.getElementById('helpModal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('helpModal');
+      if (event.target === modal) {
+        closeHelp();
+      }
+    }
+
+    // Close modal with ESC key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeHelp();
+      }
+    });
   </script>
 </body>
 </html>
