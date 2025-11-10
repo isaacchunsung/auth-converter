@@ -1459,28 +1459,46 @@
           // Update path display
           document.getElementById('claudeConfigPath').textContent = claudeConfigPath;
 
-          // Count servers - handle nested structures
+          // Count servers - handle all possible nested structures
           let serverCount = 0;
-          if (claudeConfigData.mcpServers) {
-            // Check if it's directly mcpServers object
-            if (typeof claudeConfigData.mcpServers === 'object') {
-              const firstKey = Object.keys(claudeConfigData.mcpServers)[0];
-              // Check if nested (e.g., mcpContextOrIs.mcpServers)
-              if (firstKey && claudeConfigData.mcpServers[firstKey] && claudeConfigData.mcpServers[firstKey].mcpServers) {
-                // Count all servers in all nested contexts
-                Object.keys(claudeConfigData.mcpServers).forEach(contextKey => {
-                  const context = claudeConfigData.mcpServers[contextKey];
-                  if (context.mcpServers && typeof context.mcpServers === 'object') {
-                    serverCount += Object.keys(context.mcpServers).length;
-                  }
-                });
-              } else {
-                // Direct mcpServers structure
-                serverCount = Object.keys(claudeConfigData.mcpServers).length;
+
+          function countServersRecursively(obj, path = []) {
+            if (!obj || typeof obj !== 'object') return;
+
+            // Check if this object contains mcpServers
+            if (obj.mcpServers && typeof obj.mcpServers === 'object') {
+              const servers = obj.mcpServers;
+
+              // Check if mcpServers contains actual server definitions or more nested structures
+              const firstKey = Object.keys(servers)[0];
+              if (firstKey) {
+                const firstValue = servers[firstKey];
+
+                // If first value has 'type' or 'command', it's a server definition
+                if (firstValue && (firstValue.type || firstValue.command)) {
+                  // This is actual server list
+                  serverCount += Object.keys(servers).length;
+                  console.log(`Found ${Object.keys(servers).length} servers at path: ${path.join(' -> ')}`);
+                } else {
+                  // This might be another nested level, recurse
+                  Object.keys(servers).forEach(key => {
+                    countServersRecursively(servers[key], [...path, 'mcpServers', key]);
+                  });
+                }
               }
             }
+
+            // Also check direct children for nested structures
+            Object.keys(obj).forEach(key => {
+              if (key !== 'mcpServers' && typeof obj[key] === 'object') {
+                countServersRecursively(obj[key], [...path, key]);
+              }
+            });
           }
+
+          countServersRecursively(claudeConfigData);
           document.getElementById('claudeServerCount').textContent = serverCount;
+          console.log(`Total MCP servers found: ${serverCount}`);
 
           // Display config
           document.getElementById('claudeConfigDisplay').value = JSON.stringify(claudeConfigData, null, 2);
@@ -1536,6 +1554,29 @@
 
       try {
         const newServers = JSON.parse(newInput);
+
+        // Find the user directory key to show where servers will be added
+        const homeDir = Object.keys(claudeConfigData).find(key =>
+          key.startsWith('/Users/') ||
+          key.startsWith('/home/') ||
+          key.match(/^[A-Z]:\\Users\\/)
+        );
+
+        if (homeDir) {
+          const infoDiv = document.createElement('div');
+          infoDiv.style.cssText = 'background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 15px; color: #1565c0; font-size: 13px;';
+          infoDiv.textContent = `✓ 서버가 추가될 위치: ${homeDir} → mcpServers`;
+
+          const existingInfo = document.getElementById('claudeServerNameSection').previousElementSibling;
+          if (existingInfo && existingInfo.style.background === 'rgb(227, 242, 253)') {
+            existingInfo.remove();
+          }
+
+          document.getElementById('claudeServerNameSection').parentElement.insertBefore(
+            infoDiv,
+            document.getElementById('claudeServerNameSection')
+          );
+        }
 
         // Extract server names from new servers
         const serversToAdd = newServers.mcpServers || newServers;
@@ -1606,11 +1647,32 @@
           }
         });
 
+        // Find the user directory key (e.g., "/Users/gwanli")
+        // Look for keys that look like home directories
+        const homeDir = Object.keys(claudeConfigData).find(key =>
+          key.startsWith('/Users/') ||
+          key.startsWith('/home/') ||
+          key.match(/^[A-Z]:\\Users\\/) ||
+          key === claudeConfigPath.split('/').slice(0, 3).join('/')
+        );
+
+        console.log('Home directory detected:', homeDir);
+        console.log('Available keys in config:', Object.keys(claudeConfigData));
+
+        // Prepare the existing config (user directory level)
+        let existingConfig = {};
+        if (homeDir && claudeConfigData[homeDir]) {
+          existingConfig = claudeConfigData[homeDir];
+          console.log('Using existing config from:', homeDir);
+        } else {
+          console.warn('Could not find home directory in config, will use empty config');
+        }
+
         fetch('/api/merge-mcp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            existingConfig: JSON.stringify(claudeConfigData),
+            existingConfig: JSON.stringify(existingConfig),
             newServers: newInput,
             serverNameMap: serverNameMap
           })
@@ -1618,19 +1680,51 @@
         .then(response => response.json())
         .then(async data => {
           if (data.success) {
+            // Update the user directory level with merged servers
+            if (homeDir) {
+              if (!claudeConfigData[homeDir]) {
+                claudeConfigData[homeDir] = {};
+              }
+              claudeConfigData[homeDir] = data.data;
+            }
+
             // Save the merged config back to file
             const saveResult = await window.electronAPI.saveClaudeConfig({
               path: claudeConfigPath,
-              data: data.data
+              data: claudeConfigData
             });
 
             if (saveResult.success) {
-              // Update local data
-              claudeConfigData = data.data;
+              // claudeConfigData is already updated with the full config including other keys
 
-              // Update display
-              document.getElementById('claudeConfigDisplay').value = JSON.stringify(data.data, null, 2);
-              const serverCount = data.data.mcpServers ? Object.keys(data.data.mcpServers).length : 0;
+              // Update display with full config
+              document.getElementById('claudeConfigDisplay').value = JSON.stringify(claudeConfigData, null, 2);
+
+              // Recount servers with updated data
+              let serverCount = 0;
+              function countServersRecursively(obj, path = []) {
+                if (!obj || typeof obj !== 'object') return;
+                if (obj.mcpServers && typeof obj.mcpServers === 'object') {
+                  const servers = obj.mcpServers;
+                  const firstKey = Object.keys(servers)[0];
+                  if (firstKey) {
+                    const firstValue = servers[firstKey];
+                    if (firstValue && (firstValue.type || firstValue.command)) {
+                      serverCount += Object.keys(servers).length;
+                    } else {
+                      Object.keys(servers).forEach(key => {
+                        countServersRecursively(servers[key], [...path, 'mcpServers', key]);
+                      });
+                    }
+                  }
+                }
+                Object.keys(obj).forEach(key => {
+                  if (key !== 'mcpServers' && typeof obj[key] === 'object') {
+                    countServersRecursively(obj[key], [...path, key]);
+                  }
+                });
+              }
+              countServersRecursively(claudeConfigData);
               document.getElementById('claudeServerCount').textContent = serverCount;
 
               // Display the merged result
