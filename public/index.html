@@ -1459,8 +1459,16 @@
           // Update path display
           document.getElementById('claudeConfigPath').textContent = claudeConfigPath;
 
+          // Find user home directory
+          const homeDir = Object.keys(claudeConfigData).find(key =>
+            key.startsWith('/Users/') ||
+            key.startsWith('/home/') ||
+            key.match(/^[A-Z]:\\Users\\/)
+          );
+
           // Count servers - handle all possible nested structures
           let serverCount = 0;
+          let userMcpServers = {};
 
           function countServersRecursively(obj, path = []) {
             if (!obj || typeof obj !== 'object') return;
@@ -1478,6 +1486,10 @@
                 if (firstValue && (firstValue.type || firstValue.command)) {
                   // This is actual server list
                   serverCount += Object.keys(servers).length;
+                  // If this is the user's home directory, save it
+                  if (path.length > 0 && path[0] === homeDir) {
+                    userMcpServers = servers;
+                  }
                   console.log(`Found ${Object.keys(servers).length} servers at path: ${path.join(' -> ')}`);
                 } else {
                   // This might be another nested level, recurse
@@ -1500,8 +1512,12 @@
           document.getElementById('claudeServerCount').textContent = serverCount;
           console.log(`Total MCP servers found: ${serverCount}`);
 
-          // Display config
-          document.getElementById('claudeConfigDisplay').value = JSON.stringify(claudeConfigData, null, 2);
+          // Display only user's mcpServers instead of full config
+          const displayData = userMcpServers && Object.keys(userMcpServers).length > 0
+            ? { mcpServers: userMcpServers }
+            : { mcpServers: {} };
+
+          document.getElementById('claudeConfigDisplay').value = JSON.stringify(displayData, null, 2);
 
           // Show the config section
           document.getElementById('claudeConfigSection').style.display = 'block';
@@ -1705,11 +1721,17 @@
             if (saveResult.success) {
               // claudeConfigData is already updated with the full config including other keys
 
-              // Update display with full config
-              document.getElementById('claudeConfigDisplay').value = JSON.stringify(claudeConfigData, null, 2);
-
-              // Recount servers with updated data
+              // Recount servers and get user's mcpServers
               let serverCount = 0;
+              let userMcpServers = {};
+
+              // Find home directory
+              const homeDir = Object.keys(claudeConfigData).find(key =>
+                key.startsWith('/Users/') ||
+                key.startsWith('/home/') ||
+                key.match(/^[A-Z]:\\Users\\/)
+              );
+
               function countServersRecursively(obj, path = []) {
                 if (!obj || typeof obj !== 'object') return;
                 if (obj.mcpServers && typeof obj.mcpServers === 'object') {
@@ -1719,6 +1741,10 @@
                     const firstValue = servers[firstKey];
                     if (firstValue && (firstValue.type || firstValue.command)) {
                       serverCount += Object.keys(servers).length;
+                      // If this is the user's home directory, save it
+                      if (path.length > 0 && path[0] === homeDir) {
+                        userMcpServers = servers;
+                      }
                     } else {
                       Object.keys(servers).forEach(key => {
                         countServersRecursively(servers[key], [...path, 'mcpServers', key]);
@@ -1734,6 +1760,13 @@
               }
               countServersRecursively(claudeConfigData);
               document.getElementById('claudeServerCount').textContent = serverCount;
+
+              // Update display with only user's mcpServers
+              const displayData = userMcpServers && Object.keys(userMcpServers).length > 0
+                ? { mcpServers: userMcpServers }
+                : { mcpServers: {} };
+
+              document.getElementById('claudeConfigDisplay').value = JSON.stringify(displayData, null, 2);
 
               // Display the merged result
               displayJSON(data.data);

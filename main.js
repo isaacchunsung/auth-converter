@@ -258,7 +258,16 @@ ipcMain.handle('load-claude-config', async (event) => {
 
 ipcMain.handle('save-claude-config', async (event, { path: configPath, data }) => {
   try {
-    console.log('Saving Claude config to:', configPath);
+    console.log('=== Saving Claude config ===');
+    console.log('Path:', configPath);
+    console.log('Data keys:', Object.keys(data));
+
+    // Check /Users/gwanli mcpServers
+    const homeDir = Object.keys(data).find(key => key.startsWith('/Users/') || key.startsWith('/home/'));
+    if (homeDir && data[homeDir] && data[homeDir].mcpServers) {
+      console.log(`mcpServers in ${homeDir}:`, Object.keys(data[homeDir].mcpServers));
+      console.log(`Server count: ${Object.keys(data[homeDir].mcpServers).length}`);
+    }
 
     // Create backup
     const backupPath = configPath + '.backup';
@@ -270,6 +279,7 @@ ipcMain.handle('save-claude-config', async (event, { path: configPath, data }) =
     // Write file
     const jsonString = JSON.stringify(data, null, 2);
     fs.writeFileSync(configPath, jsonString, 'utf8');
+    console.log('File saved successfully');
 
     return {
       success: true,
