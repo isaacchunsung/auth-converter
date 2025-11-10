@@ -19,5 +19,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('build-progress', (event, data) => {
       callback(data);
     });
+  },
+
+  // Claude Config 불러오기
+  loadClaudeConfig: () => {
+    return ipcRenderer.invoke('load-claude-config');
+  },
+
+  // Claude Config 저장
+  saveClaudeConfig: (data) => {
+    return ipcRenderer.invoke('save-claude-config', data);
   }
 });

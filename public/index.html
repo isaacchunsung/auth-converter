@@ -552,6 +552,7 @@
         <button class="tab active" onclick="switchTab('paste')">텍스트 입력</button>
         <button class="tab" onclick="switchTab('upload')">파일 업로드</button>
         <button class="tab" onclick="switchTab('mcp')">MCP Merger</button>
+        <button class="tab" onclick="switchTab('claude')">Claude Config</button>
       </div>
 
       <div id="paste-tab" class="tab-content active">
@@ -590,6 +591,44 @@
 
         <button class="btn" onclick="analyzeMcpServers()">서버 분석</button>
         <button class="btn" onclick="mergeMcpServers()" id="mergeBtn" style="display: none;">병합 실행</button>
+      </div>
+
+      <div id="claude-tab" class="tab-content">
+        <h3 style="color: #667eea; margin-bottom: 15px;">⚙️ Claude Config Manager</h3>
+        <p style="color: #666; margin-bottom: 20px;">사용자 폴더의 .claude.json 파일을 불러와 MCP 서버를 추가합니다</p>
+
+        <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+          <p style="margin: 0; color: #666;"><strong>Claude Config 경로:</strong></p>
+          <p id="claudeConfigPath" style="margin: 5px 0 0 0; font-family: 'Courier New', monospace; color: #667eea;">~/.claude.json</p>
+        </div>
+
+        <button class="btn" onclick="loadClaudeConfig()">📂 Claude Config 불러오기</button>
+        <button class="btn-secondary" onclick="refreshClaudeConfig()" style="display: none;" id="refreshClaudeBtn">🔄 새로고침</button>
+
+        <div id="claudeConfigSection" style="margin-top: 20px; display: none;">
+          <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0; color: #2e7d32;">✓ Claude Config 로드 완료</h4>
+            <p style="margin: 5px 0; color: #1b5e20;">현재 MCP 서버 수: <strong id="claudeServerCount">0</strong></p>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">현재 Claude Config:</label>
+            <textarea id="claudeConfigDisplay" readonly style="min-height: 200px; background: #f5f5f5; cursor: default;"></textarea>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">추가할 MCP 서버 JSON:</label>
+            <textarea id="claudeNewMcpInput" placeholder='{"server2": {"command": "...", "args": [...]}}' style="min-height: 150px;"></textarea>
+          </div>
+
+          <div id="claudeServerNameSection" style="margin-bottom: 20px; display: none;">
+            <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">서버명 변경 (선택사항):</label>
+            <div id="claudeServerNameMapping" style="background: #f5f5f5; padding: 15px; border-radius: 8px;"></div>
+          </div>
+
+          <button class="btn" onclick="analyzeClaudeServers()">서버 분석</button>
+          <button class="btn" onclick="mergeClaudeServers()" id="claudeMergeBtn" style="display: none;">병합 및 저장</button>
+        </div>
       </div>
 
       <div class="error-message" id="errorMessage"></div>
@@ -705,6 +744,9 @@
       } else if (tab === 'mcp') {
         document.querySelector('.tab:nth-child(3)').classList.add('active');
         document.getElementById('mcp-tab').classList.add('active');
+      } else if (tab === 'claude') {
+        document.querySelector('.tab:nth-child(4)').classList.add('active');
+        document.getElementById('claude-tab').classList.add('active');
       }
     }
 
@@ -1342,6 +1384,222 @@
         closeHelp();
       }
     });
+
+    // Claude Config functions
+    let claudeConfigData = null;
+    let claudeServerNameMap = {};
+    let claudeConfigPath = '';
+
+    async function loadClaudeConfig() {
+      if (!window.electronAPI || !window.electronAPI.loadClaudeConfig) {
+        showError('Claude Config 불러오기는 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      try {
+        const result = await window.electronAPI.loadClaudeConfig();
+
+        if (result.success) {
+          claudeConfigData = result.data;
+          claudeConfigPath = result.path;
+
+          // Update path display
+          document.getElementById('claudeConfigPath').textContent = claudeConfigPath;
+
+          // Count servers
+          const serverCount = claudeConfigData.mcpServers ? Object.keys(claudeConfigData.mcpServers).length : 0;
+          document.getElementById('claudeServerCount').textContent = serverCount;
+
+          // Display config
+          document.getElementById('claudeConfigDisplay').value = JSON.stringify(claudeConfigData, null, 2);
+
+          // Show the config section
+          document.getElementById('claudeConfigSection').style.display = 'block';
+          document.getElementById('refreshClaudeBtn').style.display = 'inline-block';
+
+        } else {
+          showError('Claude Config 불러오기 실패: ' + result.error);
+        }
+      } catch (error) {
+        showError('오류: ' + error.message);
+      }
+    }
+
+    async function refreshClaudeConfig() {
+      await loadClaudeConfig();
+
+      // Clear the new servers input
+      document.getElementById('claudeNewMcpInput').value = '';
+
+      // Hide server name section
+      document.getElementById('claudeServerNameSection').style.display = 'none';
+      document.getElementById('claudeMergeBtn').style.display = 'none';
+
+      // Show success message
+      const tempMessage = document.createElement('div');
+      tempMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; animation: fadeIn 0.3s;';
+      tempMessage.textContent = '✓ Claude Config를 새로고침했습니다';
+      document.body.appendChild(tempMessage);
+
+      setTimeout(() => {
+        tempMessage.style.animation = 'fadeOut 0.3s';
+        setTimeout(() => {
+          document.body.removeChild(tempMessage);
+        }, 300);
+      }, 2000);
+    }
+
+    function analyzeClaudeServers() {
+      if (!claudeConfigData) {
+        showError('먼저 Claude Config를 불러오세요');
+        return;
+      }
+
+      const newInput = document.getElementById('claudeNewMcpInput').value.trim();
+
+      if (!newInput) {
+        showError('추가할 서버 JSON을 입력하세요');
+        return;
+      }
+
+      try {
+        const newServers = JSON.parse(newInput);
+
+        // Extract server names from new servers
+        const serversToAdd = newServers.mcpServers || newServers;
+        const serverNames = Object.keys(serversToAdd);
+
+        if (serverNames.length === 0) {
+          showError('추가할 서버가 없습니다');
+          return;
+        }
+
+        // Show server name mapping section
+        const serverNameSection = document.getElementById('claudeServerNameSection');
+        const serverNameMapping = document.getElementById('claudeServerNameMapping');
+
+        serverNameMapping.innerHTML = serverNames.map(name => `
+          <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+            <span style="min-width: 150px; font-weight: bold;">${escapeHtml(name)}:</span>
+            <input type="text"
+                   id="claude-rename-${escapeHtml(name)}"
+                   value="${escapeHtml(name)}"
+                   placeholder="새 서버명 (선택사항)"
+                   style="flex: 1; padding: 8px; border: 2px solid #e0e0e0; border-radius: 5px;">
+          </div>
+        `).join('');
+
+        serverNameSection.style.display = 'block';
+        document.getElementById('claudeMergeBtn').style.display = 'inline-block';
+
+        // Initialize name map
+        claudeServerNameMap = {};
+        serverNames.forEach(name => {
+          claudeServerNameMap[name] = name;
+        });
+
+      } catch (error) {
+        showError('JSON 파싱 오류: ' + error.message);
+      }
+    }
+
+    async function mergeClaudeServers() {
+      if (!claudeConfigData) {
+        showError('먼저 Claude Config를 불러오세요');
+        return;
+      }
+
+      if (!window.electronAPI || !window.electronAPI.saveClaudeConfig) {
+        showError('Claude Config 저장은 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      const newInput = document.getElementById('claudeNewMcpInput').value.trim();
+
+      if (!newInput) {
+        showError('추가할 서버 JSON을 입력하세요');
+        return;
+      }
+
+      try {
+        // Collect server name mappings
+        const serverNameMap = {};
+        Object.keys(claudeServerNameMap).forEach(oldName => {
+          const inputElement = document.getElementById('claude-rename-' + oldName);
+          if (inputElement) {
+            const newName = inputElement.value.trim();
+            if (newName && newName !== oldName) {
+              serverNameMap[oldName] = newName;
+            }
+          }
+        });
+
+        fetch('/api/merge-mcp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            existingConfig: JSON.stringify(claudeConfigData),
+            newServers: newInput,
+            serverNameMap: serverNameMap
+          })
+        })
+        .then(response => response.json())
+        .then(async data => {
+          if (data.success) {
+            // Save the merged config back to file
+            const saveResult = await window.electronAPI.saveClaudeConfig({
+              path: claudeConfigPath,
+              data: data.data
+            });
+
+            if (saveResult.success) {
+              // Update local data
+              claudeConfigData = data.data;
+
+              // Update display
+              document.getElementById('claudeConfigDisplay').value = JSON.stringify(data.data, null, 2);
+              const serverCount = data.data.mcpServers ? Object.keys(data.data.mcpServers).length : 0;
+              document.getElementById('claudeServerCount').textContent = serverCount;
+
+              // Display the merged result
+              displayJSON(data.data);
+
+              // Show success message
+              const resultSection = document.getElementById('resultSection');
+              const existingInfo = resultSection.querySelector('.mcp-info');
+              if (existingInfo) {
+                existingInfo.remove();
+              }
+
+              const infoDiv = document.createElement('div');
+              infoDiv.className = 'mcp-info';
+              infoDiv.style.cssText = 'background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #1565c0;';
+              infoDiv.innerHTML = `
+                <h4 style="margin: 0 0 10px 0;">✓ Claude Config 업데이트 완료</h4>
+                <p style="margin: 5px 0;"><strong>파일 경로:</strong> ${escapeHtml(claudeConfigPath)}</p>
+                <p style="margin: 5px 0;"><strong>추가된 서버:</strong> ${data.addedServers.join(', ')}</p>
+                <p style="margin: 5px 0;"><strong>전체 서버 수:</strong> ${data.totalServers}</p>
+              `;
+
+              resultSection.insertBefore(infoDiv, resultSection.querySelector('.export-section'));
+
+              // Clear inputs
+              document.getElementById('claudeNewMcpInput').value = '';
+              document.getElementById('claudeServerNameSection').style.display = 'none';
+              document.getElementById('claudeMergeBtn').style.display = 'none';
+
+            } else {
+              showError('파일 저장 실패: ' + saveResult.error);
+            }
+          } else {
+            showError('병합 오류: ' + data.error);
+          }
+        })
+        .catch(error => showError('오류: ' + error.message));
+      } catch (error) {
+        showError('JSON 파싱 오류: ' + error.message);
+      }
+    }
   </script>
 </body>
 </html>

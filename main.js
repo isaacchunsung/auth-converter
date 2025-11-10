@@ -36,28 +36,63 @@ function openJsonFile(filePath) {
 // Express 서버 시작
 function startServer() {
   return new Promise((resolve, reject) => {
-    serverProcess = spawn('node', [path.join(__dirname, 'server.js')], {
-      env: { ...process.env, ELECTRON_MODE: 'true' }
-    });
+    // 패키지된 앱에서는 fork를 사용, 개발 모드에서는 spawn 사용
+    if (app.isPackaged) {
+      // 패키지된 앱: fork 사용
+      const { fork } = require('child_process');
+      const serverPath = path.join(__dirname, 'server.js');
 
-    serverProcess.stdout.on('data', (data) => {
-      console.log(`Server: ${data}`);
-      if (data.toString().includes('running at')) {
-        resolve();
+      console.log('Starting server (packaged mode):', serverPath);
+
+      serverProcess = fork(serverPath, [], {
+        env: { ...process.env, ELECTRON_MODE: 'true' },
+        silent: true
+      });
+
+      if (serverProcess.stdout) {
+        serverProcess.stdout.on('data', (data) => {
+          console.log(`Server: ${data}`);
+        });
       }
-    });
 
-    serverProcess.stderr.on('data', (data) => {
-      console.error(`Server Error: ${data}`);
-    });
+      if (serverProcess.stderr) {
+        serverProcess.stderr.on('data', (data) => {
+          console.error(`Server Error: ${data}`);
+        });
+      }
 
-    serverProcess.on('error', (error) => {
-      console.error('Failed to start server:', error);
-      reject(error);
-    });
+      serverProcess.on('error', (error) => {
+        console.error('Failed to start server:', error);
+        reject(error);
+      });
 
-    // 서버 시작 대기 시간
-    setTimeout(resolve, 2000);
+      // 서버 시작 대기
+      setTimeout(resolve, 2000);
+    } else {
+      // 개발 모드: spawn 사용
+      serverProcess = spawn('node', [path.join(__dirname, 'server.js')], {
+        env: { ...process.env, ELECTRON_MODE: 'true' }
+      });
+
+      serverProcess.stdout.on('data', (data) => {
+        console.log(`Server: ${data}`);
+        if (data.toString().includes('running at')) {
+          resolve();
+        }
+      });
+
+      serverProcess.stderr.on('data', (data) => {
+        console.error(`Server Error: ${data}`);
+      });
+
+      serverProcess.on('error', (error) => {
+        console.error('Failed to start server:', error);
+        reject(error);
+      });
+
+      // 서버 시작 대기 시간
+      setTimeout(resolve, 2000);
+    }
   });
 }
 
@@ -183,6 +218,69 @@ app.on('open-file', (event, filePath) => {
     } else {
       pendingFilePath = filePath;
     }
+  }
+});
+
+// Claude Config IPC 핸들러
+ipcMain.handle('load-claude-config', async (event) => {
+  try {
+    const os = require('os');
+    const homeDir = os.homedir();
+    const claudeConfigPath = path.join(homeDir, '.claude.json');
+
+    console.log('Loading Claude config from:', claudeConfigPath);
+
+    // Check if file exists
+    if (!fs.existsSync(claudeConfigPath)) {
+      return {
+        success: false,
+        error: 'Claude config 파일을 찾을 수 없습니다: ' + claudeConfigPath
+      };
+    }
+
+    // Read file
+    const fileContent = fs.readFileSync(claudeConfigPath, 'utf8');
+    const configData = JSON.parse(fileContent);
+
+    return {
+      success: true,
+      data: configData,
+      path: claudeConfigPath
+    };
+  } catch (error) {
+    console.error('Error loading Claude config:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+ipcMain.handle('save-claude-config', async (event, { path: configPath, data }) => {
+  try {
+    console.log('Saving Claude config to:', configPath);
+
+    // Create backup
+    const backupPath = configPath + '.backup';
+    if (fs.existsSync(configPath)) {
+      fs.copyFileSync(configPath, backupPath);
+      console.log('Backup created:', backupPath);
+    }
+
+    // Write file
+    const jsonString = JSON.stringify(data, null, 2);
+    fs.writeFileSync(configPath, jsonString, 'utf8');
+
+    return {
+      success: true,
+      message: 'Claude config가 성공적으로 저장되었습니다'
+    };
+  } catch (error) {
+    console.error('Error saving Claude config:', error);
+    return {
+      success: false,
+      error: error.message
+    };
   }
 });
 
