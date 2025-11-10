@@ -1680,12 +1680,20 @@
         .then(response => response.json())
         .then(async data => {
           if (data.success) {
-            // Update the user directory level with merged servers
+            // Update only the mcpServers at user directory level, preserving other fields
             if (homeDir) {
               if (!claudeConfigData[homeDir]) {
                 claudeConfigData[homeDir] = {};
               }
-              claudeConfigData[homeDir] = data.data;
+              // Merge only mcpServers, keep other fields intact
+              if (data.data.mcpServers) {
+                claudeConfigData[homeDir].mcpServers = data.data.mcpServers;
+              } else {
+                // If returned data doesn't have mcpServers wrapper, it's the servers directly
+                claudeConfigData[homeDir].mcpServers = data.data;
+              }
+              console.log('Updated mcpServers at:', homeDir);
+              console.log('New server count:', Object.keys(claudeConfigData[homeDir].mcpServers).length);
             }
 
             // Save the merged config back to file
