@@ -526,6 +526,34 @@
     .feature-box p {
       margin: 5px 0;
     }
+
+    .category-section {
+      margin-bottom: 25px;
+    }
+
+    .category-header {
+      color: #764ba2;
+      margin-bottom: 12px;
+      font-size: 1.1em;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .main-title {
+      color: #667eea;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 1.3em;
+    }
   </style>
 </head>
 <body>
@@ -548,11 +576,30 @@
     </div>
 
     <div class="input-section">
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('paste')">텍스트 입력</button>
-        <button class="tab" onclick="switchTab('upload')">파일 업로드</button>
-        <button class="tab" onclick="switchTab('mcp')">MCP Merger</button>
-        <button class="tab" onclick="switchTab('claude')">Claude Config</button>
+      <h2 class="main-title">기능 선택</h2>
+
+      <!-- JSON Parser Category -->
+      <div class="category-section">
+        <h3 class="category-header">
+          <span>📋</span>
+          <span>JSON Parser</span>
+        </h3>
+        <div class="category-tabs">
+          <button class="tab active" onclick="switchTab('paste')">텍스트 입력</button>
+          <button class="tab" onclick="switchTab('upload')">파일 업로드</button>
+        </div>
+      </div>
+
+      <!-- MCP Tools Category -->
+      <div class="category-section">
+        <h3 class="category-header">
+          <span>🔧</span>
+          <span>MCP Tools</span>
+        </h3>
+        <div class="category-tabs">
+          <button class="tab" onclick="switchTab('mcp')">MCP Merger</button>
+          <button class="tab" onclick="switchTab('claude')">Claude Config Manager</button>
+        </div>
       </div>
 
       <div id="paste-tab" class="tab-content active">
@@ -732,20 +779,26 @@
     let currentData = null;
 
     function switchTab(tab) {
+      // Remove active class from all tabs and tab contents
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
+      // Add active class to the clicked tab and show corresponding content
+      const tabButtons = document.querySelectorAll('.tab');
+      tabButtons.forEach(button => {
+        if (button.onclick && button.onclick.toString().includes(`'${tab}'`)) {
+          button.classList.add('active');
+        }
+      });
+
+      // Show corresponding tab content
       if (tab === 'paste') {
-        document.querySelector('.tab:nth-child(1)').classList.add('active');
         document.getElementById('paste-tab').classList.add('active');
       } else if (tab === 'upload') {
-        document.querySelector('.tab:nth-child(2)').classList.add('active');
         document.getElementById('upload-tab').classList.add('active');
       } else if (tab === 'mcp') {
-        document.querySelector('.tab:nth-child(3)').classList.add('active');
         document.getElementById('mcp-tab').classList.add('active');
       } else if (tab === 'claude') {
-        document.querySelector('.tab:nth-child(4)').classList.add('active');
         document.getElementById('claude-tab').classList.add('active');
       }
     }
@@ -1406,8 +1459,27 @@
           // Update path display
           document.getElementById('claudeConfigPath').textContent = claudeConfigPath;
 
-          // Count servers
-          const serverCount = claudeConfigData.mcpServers ? Object.keys(claudeConfigData.mcpServers).length : 0;
+          // Count servers - handle nested structures
+          let serverCount = 0;
+          if (claudeConfigData.mcpServers) {
+            // Check if it's directly mcpServers object
+            if (typeof claudeConfigData.mcpServers === 'object') {
+              const firstKey = Object.keys(claudeConfigData.mcpServers)[0];
+              // Check if nested (e.g., mcpContextOrIs.mcpServers)
+              if (firstKey && claudeConfigData.mcpServers[firstKey] && claudeConfigData.mcpServers[firstKey].mcpServers) {
+                // Count all servers in all nested contexts
+                Object.keys(claudeConfigData.mcpServers).forEach(contextKey => {
+                  const context = claudeConfigData.mcpServers[contextKey];
+                  if (context.mcpServers && typeof context.mcpServers === 'object') {
+                    serverCount += Object.keys(context.mcpServers).length;
+                  }
+                });
+              } else {
+                // Direct mcpServers structure
+                serverCount = Object.keys(claudeConfigData.mcpServers).length;
+              }
+            }
+          }
           document.getElementById('claudeServerCount').textContent = serverCount;
 
           // Display config
