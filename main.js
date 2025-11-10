@@ -256,17 +256,53 @@ ipcMain.handle('load-claude-config', async (event) => {
   }
 });
 
+ipcMain.handle('load-claude-desktop-config', async (event) => {
+  try {
+    const os = require('os');
+    const homeDir = os.homedir();
+    const desktopConfigPath = path.join(homeDir, 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
+
+    console.log('Loading Claude Desktop config from:', desktopConfigPath);
+
+    // Check if file exists
+    if (!fs.existsSync(desktopConfigPath)) {
+      return {
+        success: false,
+        error: 'Claude Desktop config 파일을 찾을 수 없습니다: ' + desktopConfigPath
+      };
+    }
+
+    // Read file
+    const fileContent = fs.readFileSync(desktopConfigPath, 'utf8');
+    const configData = JSON.parse(fileContent);
+
+    return {
+      success: true,
+      data: configData,
+      path: desktopConfigPath
+    };
+  } catch (error) {
+    console.error('Error loading Claude Desktop config:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
 ipcMain.handle('save-claude-config', async (event, { path: configPath, data }) => {
   try {
     console.log('=== Saving Claude config ===');
     console.log('Path:', configPath);
     console.log('Data keys:', Object.keys(data));
 
-    // Check /Users/gwanli mcpServers
-    const homeDir = Object.keys(data).find(key => key.startsWith('/Users/') || key.startsWith('/home/'));
-    if (homeDir && data[homeDir] && data[homeDir].mcpServers) {
-      console.log(`mcpServers in ${homeDir}:`, Object.keys(data[homeDir].mcpServers));
-      console.log(`Server count: ${Object.keys(data[homeDir].mcpServers).length}`);
+    // Check /Users/gwanli mcpServers in projects
+    if (data.projects) {
+      const homeDir = Object.keys(data.projects).find(key => key.startsWith('/Users/') || key.startsWith('/home/'));
+      if (homeDir && data.projects[homeDir] && data.projects[homeDir].mcpServers) {
+        console.log(`mcpServers in projects/${homeDir}:`, Object.keys(data.projects[homeDir].mcpServers));
+        console.log(`Server count: ${Object.keys(data.projects[homeDir].mcpServers).length}`);
+      }
     }
 
     // Create backup

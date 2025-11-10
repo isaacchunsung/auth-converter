@@ -26,6 +26,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('load-claude-config');
   },
 
+  // Claude Desktop Config 불러오기
+  loadClaudeDesktopConfig: () => {
+    return ipcRenderer.invoke('load-claude-desktop-config');
+  },
+
   // Claude Config 저장
   saveClaudeConfig: (data) => {
     return ipcRenderer.invoke('save-claude-config', data);

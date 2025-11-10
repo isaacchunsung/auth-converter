@@ -598,7 +598,10 @@
         </h3>
         <div class="category-tabs">
           <button class="tab" onclick="switchTab('mcp')">MCP Merger</button>
-          <button class="tab" onclick="switchTab('claude')">Claude Config Manager</button>
+          <button class="tab" onclick="switchTab('claudeCode')">Claude Code Config</button>
+          <button class="tab" onclick="switchTab('claudeDesktop')">Claude Desktop Config</button>
+          <button class="tab" onclick="switchTab('sync')">MCP Sync</button>
+          <button class="tab" onclick="switchTab('extensions')">Extensions Sync</button>
         </div>
       </div>
 
@@ -640,22 +643,35 @@
         <button class="btn" onclick="mergeMcpServers()" id="mergeBtn" style="display: none;">병합 실행</button>
       </div>
 
-      <div id="claude-tab" class="tab-content">
-        <h3 style="color: #667eea; margin-bottom: 15px;">⚙️ Claude Config Manager</h3>
+      <div id="claudeCode-tab" class="tab-content">
+        <h3 style="color: #667eea; margin-bottom: 15px;">⚙️ Claude Code Config Manager</h3>
         <p style="color: #666; margin-bottom: 20px;">사용자 폴더의 .claude.json 파일을 불러와 MCP 서버를 추가합니다</p>
 
         <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
-          <p style="margin: 0; color: #666;"><strong>Claude Config 경로:</strong></p>
-          <p id="claudeConfigPath" style="margin: 5px 0 0 0; font-family: 'Courier New', monospace; color: #667eea;">~/.claude.json</p>
+          <p style="margin: 0; color: #666;"><strong>Claude Code Config 경로:</strong></p>
+          <p id="claudeCodeConfigPath" style="margin: 5px 0 0 0; font-family: 'Courier New', monospace; color: #667eea;">~/.claude.json</p>
         </div>
 
-        <button class="btn" onclick="loadClaudeConfig()">📂 Claude Config 불러오기</button>
-        <button class="btn-secondary" onclick="refreshClaudeConfig()" style="display: none;" id="refreshClaudeBtn">🔄 새로고침</button>
+        <button class="btn" onclick="loadClaudeCodeConfig()">📂 Claude Code Config 불러오기</button>
+        <button class="btn-secondary" onclick="refreshClaudeCodeConfig()" style="display: none;" id="refreshClaudeBtn">🔄 새로고침</button>
 
         <div id="claudeConfigSection" style="margin-top: 20px; display: none;">
           <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
             <h4 style="margin: 0 0 10px 0; color: #2e7d32;">✓ Claude Config 로드 완료</h4>
             <p style="margin: 5px 0; color: #1b5e20;">현재 MCP 서버 수: <strong id="claudeServerCount">0</strong></p>
+          </div>
+
+          <!-- Authentication Status Section -->
+          <div id="authStatusSection" style="margin-bottom: 20px; background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+            <h4 style="margin: 0 0 10px 0; color: #856404; display: flex; align-items: center; gap: 10px;">
+              🔐 Google 계정 인증 상태
+              <button class="refresh-btn" onclick="checkAuthStatus()" style="margin-left: auto; background: #ffc107; padding: 6px 12px; font-size: 12px;">
+                🔄 새로고침
+              </button>
+            </h4>
+            <div id="authStatusList" style="margin-top: 15px;">
+              <p style="color: #666; font-size: 14px;">로딩 중...</p>
+            </div>
           </div>
 
           <div style="margin-bottom: 20px;">
@@ -673,8 +689,250 @@
             <div id="claudeServerNameMapping" style="background: #f5f5f5; padding: 15px; border-radius: 8px;"></div>
           </div>
 
-          <button class="btn" onclick="analyzeClaudeServers()">서버 분석</button>
-          <button class="btn" onclick="mergeClaudeServers()" id="claudeMergeBtn" style="display: none;">병합 및 저장</button>
+          <button class="btn" onclick="analyzeClaudeCodeServers()">서버 분석</button>
+          <button class="btn" onclick="mergeClaudeCodeServers()" id="claudeMergeBtn" style="display: none;">병합 및 저장</button>
+        </div>
+      </div>
+
+      <div id="claudeDesktop-tab" class="tab-content">
+        <h3 style="color: #667eea; margin-bottom: 15px;">🖥️ Claude Desktop Config Manager</h3>
+        <p style="color: #666; margin-bottom: 20px;">Claude Desktop의 claude_desktop_config.json 파일을 불러와 MCP 서버를 추가합니다</p>
+
+        <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+          <p style="margin: 0; color: #666;"><strong>Claude Desktop Config 경로:</strong></p>
+          <p id="claudeDesktopConfigPath" style="margin: 5px 0 0 0; font-family: 'Courier New', monospace; color: #667eea;">~/Library/Application Support/Claude/claude_desktop_config.json</p>
+        </div>
+
+        <button class="btn" onclick="loadClaudeDesktopConfig()">📂 Claude Desktop Config 불러오기</button>
+        <button class="btn-secondary" onclick="refreshClaudeDesktopConfig()" style="display: none;" id="refreshClaudeDesktopBtn">🔄 새로고침</button>
+
+        <div id="claudeDesktopConfigSection" style="margin-top: 20px; display: none;">
+          <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0; color: #2e7d32;">✓ Claude Desktop Config 로드 완료</h4>
+            <p style="margin: 5px 0; color: #1b5e20;">현재 MCP 서버 수: <strong id="claudeDesktopServerCount">0</strong></p>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">현재 Claude Desktop Config:</label>
+            <textarea id="claudeDesktopConfigDisplay" readonly style="min-height: 200px; background: #f5f5f5; cursor: default;"></textarea>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">추가할 MCP 서버 JSON:</label>
+            <textarea id="claudeDesktopNewMcpInput" placeholder='{"server2": {"command": "...", "args": [...]}}' style="min-height: 150px;"></textarea>
+          </div>
+
+          <div id="claudeDesktopServerNameSection" style="margin-bottom: 20px; display: none;">
+            <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">서버명 변경 (선택사항):</label>
+            <div id="claudeDesktopServerNameMapping" style="background: #f5f5f5; padding: 15px; border-radius: 8px;"></div>
+          </div>
+
+          <button class="btn" onclick="analyzeClaudeDesktopServers()">서버 분석</button>
+          <button class="btn" onclick="mergeClaudeDesktopServers()" id="claudeDesktopMergeBtn" style="display: none;">병합 및 저장</button>
+        </div>
+      </div>
+
+      <div id="extensions-tab" class="tab-content">
+        <h3 style="color: #667eea; margin-bottom: 15px;">🧩 Extensions Sync</h3>
+        <p style="color: #666; margin-bottom: 20px;">Claude Desktop Extensions를 Claude Code MCP 서버로 변환하여 추가합니다</p>
+
+        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+          <h4 style="margin: 0 0 10px 0; color: #856404;">📌 Extension과 MCP Server의 차이</h4>
+          <ul style="margin: 5px 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.6;">
+            <li><strong>Claude Desktop Extensions:</strong> Claude Desktop이 자동으로 인식하여 "Local MCP servers"에 표시. 별도 설정 불필요.</li>
+            <li><strong>Claude Code MCP Servers:</strong> ~/.claude.json에 수동으로 설정 필요. Extensions Sync가 이를 자동화.</li>
+            <li><strong>결과:</strong> 동일한 Extension을 Claude Desktop과 Claude Code 양쪽에서 사용 가능.</li>
+          </ul>
+        </div>
+
+        <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+          <p style="margin: 0 0 10px 0; color: #666;"><strong>Extensions 폴더 경로:</strong></p>
+          <p style="margin: 5px 0; font-family: 'Courier New', monospace; color: #667eea; font-size: 12px;">
+            ~/Library/Application Support/Claude/Claude Extensions
+          </p>
+        </div>
+
+        <button class="btn" onclick="scanExtensions()">🔍 Extensions 스캔</button>
+
+        <div id="extensionsSection" style="margin-top: 20px; display: none;">
+          <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0; color: #2e7d32;">✓ Extensions 스캔 완료</h4>
+            <p style="margin: 5px 0; color: #1b5e20;">발견된 Extensions: <strong id="extensionsCount">0</strong>개</p>
+          </div>
+
+          <div id="extensionsList" style="margin-bottom: 20px;">
+            <!-- Extensions will be listed here -->
+          </div>
+
+          <div id="selectedExtensionDetails" style="display: none; margin-top: 20px;">
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+              <h4 style="margin: 0 0 10px 0; color: #856404;">선택된 Extension</h4>
+              <div id="extensionInfo"></div>
+            </div>
+
+            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #FF9800;">
+              <h4 style="margin: 0 0 10px 0; color: #e65100;">👤 계정 식별자 (선택사항)</h4>
+              <p style="margin: 5px 0 10px 0; color: #e65100; font-size: 13px;">
+                여러 계정을 동시에 사용하려면 계정 식별자를 입력하세요. (예: intenet1, intenet8821)<br>
+                <span style="font-size: 12px; opacity: 0.9;">서버 이름: <strong>workspace-mcp-{식별자}</strong> 형식으로 생성됩니다.</span>
+              </p>
+              <input type="text"
+                     id="accountIdentifier"
+                     placeholder="예: intenet1, intenet8821 등"
+                     style="width: 100%; padding: 10px; border: 2px solid #FF9800; border-radius: 5px; font-size: 14px;">
+              <div style="margin-top: 8px; font-size: 12px; color: #e65100; opacity: 0.9;">
+                💡 비워두면 기본 이름 "workspace-mcp"로 생성됩니다.
+              </div>
+            </div>
+
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #2196F3;">
+              <h4 style="margin: 0 0 10px 0; color: #1565c0;">📂 환경변수 JSON 파일 업로드 (선택사항)</h4>
+              <p style="margin: 5px 0 15px 0; color: #1565c0; font-size: 13px;">
+                환경변수 설정 파일을 업로드하거나 드래그하여 자동으로 설정할 수 있습니다.<br>
+                <span style="font-size: 12px; opacity: 0.9;">예: intenet8821_웹앱.json, intenet1_config.json 등</span>
+              </p>
+
+              <div id="envFileDropZone"
+                   style="border: 2px dashed #2196F3; border-radius: 8px; padding: 30px; text-align: center; background: rgba(33, 150, 243, 0.05); cursor: pointer; transition: all 0.3s;"
+                   ondrop="handleEnvFileDrop(event)"
+                   ondragover="handleEnvFileDragOver(event)"
+                   ondragleave="handleEnvFileDragLeave(event)"
+                   onclick="document.getElementById('envFileInput').click()">
+                <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
+                <p style="margin: 5px 0; color: #1565c0; font-weight: bold;">파일을 드래그하거나 클릭하여 선택</p>
+                <p style="margin: 5px 0; color: #666; font-size: 12px;">지원 형식: .json</p>
+                <input type="file" id="envFileInput" accept=".json" style="display: none;" onchange="handleEnvFileSelect(event)">
+              </div>
+
+              <div id="envFileInfo" style="display: none; margin-top: 15px; padding: 12px; background: rgba(76, 175, 80, 0.1); border-radius: 5px; border-left: 3px solid #4CAF50;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <p style="margin: 0; color: #2e7d32; font-weight: bold; font-size: 13px;">✓ 파일 로드됨</p>
+                    <p id="envFileName" style="margin: 5px 0 0 0; color: #666; font-size: 12px;"></p>
+                  </div>
+                  <button onclick="clearEnvFile()" style="background: none; border: none; color: #f44336; cursor: pointer; font-size: 20px; padding: 5px;">×</button>
+                </div>
+              </div>
+
+              <div style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 5px; font-size: 12px; color: #666;">
+                💡 <strong>안내:</strong> Claude Desktop과 인증 정보를 공유하지 않습니다. 각 환경에서 별도로 인증이 필요합니다.
+              </div>
+            </div>
+
+            <div id="mcpConfigPreview" style="margin-bottom: 20px;">
+              <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">생성될 MCP 서버 설정:</label>
+              <textarea id="mcpConfigDisplay" readonly style="min-height: 200px; background: #f5f5f5; cursor: default; font-size: 12px;"></textarea>
+            </div>
+
+            <div id="userConfigSection" style="display: none; margin-bottom: 20px;">
+              <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #2196F3;">
+                <h4 style="margin: 0 0 10px 0; color: #1565c0;">⚙️ 환경 변수 설정</h4>
+                <p style="margin: 5px 0; color: #1565c0; font-size: 14px;">이 Extension은 추가 환경 변수 설정이 필요합니다. 아래에서 직접 입력하거나, 나중에 .claude.json 파일에서 설정할 수 있습니다.</p>
+              </div>
+              <div id="userConfigFields" style="background: #f5f5f5; padding: 15px; border-radius: 8px;"></div>
+            </div>
+
+            <button class="btn" onclick="addExtensionToClaudeCode()" id="addExtensionBtn">➡️ Claude Code에 추가</button>
+            <button class="btn-secondary" onclick="showInstalledExtensions()" style="margin-left: 10px;">📋 설치된 Extension 관리</button>
+          </div>
+        </div>
+
+        <div id="installedExtensionsSection" style="margin-top: 30px; display: none;">
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+            <h4 style="margin: 0 0 15px 0; color: #667eea;">📋 Claude Code에 설치된 Extension 관리</h4>
+            <div id="installedExtensionsList">
+              <!-- Installed extensions will be listed here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sync-tab" class="tab-content">
+        <h3 style="color: #667eea; margin-bottom: 15px;">🔄 MCP Sync (Claude Desktop ↔ Claude Code)</h3>
+        <p style="color: #666; margin-bottom: 20px;">클로드 데스크탑과 클로드 코드의 MCP 서버를 비교하고 동기화합니다</p>
+
+        <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+          <p style="margin: 0 0 10px 0; color: #666;"><strong>설정 파일 경로:</strong></p>
+          <p style="margin: 5px 0; font-family: 'Courier New', monospace; color: #667eea; font-size: 12px;">
+            • Claude Desktop: ~/Library/Application Support/Claude/claude_desktop_config.json<br>
+            • Claude Code: ~/.claude.json (projects.homeDir.mcpServers)
+          </p>
+        </div>
+
+        <button class="btn" onclick="loadBothConfigs()">📂 두 설정 파일 불러오기</button>
+
+        <div id="syncSection" style="margin-top: 20px; display: none;">
+          <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0; color: #2e7d32;">✓ 설정 로드 완료</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+              <div>
+                <p style="margin: 5px 0; color: #1b5e20;"><strong>Claude Desktop:</strong></p>
+                <p style="margin: 5px 0; color: #1b5e20;">MCP 서버 수: <strong id="desktopServerCount">0</strong></p>
+              </div>
+              <div>
+                <p style="margin: 5px 0; color: #1b5e20;"><strong>Claude Code:</strong></p>
+                <p style="margin: 5px 0; color: #1b5e20;">MCP 서버 수: <strong id="codeServerCount">0</strong></p>
+              </div>
+            </div>
+          </div>
+
+          <div id="comparisonResult" style="margin-bottom: 20px;">
+            <!-- Comparison results will be inserted here -->
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div>
+              <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">Claude Desktop MCP 서버:</label>
+              <textarea id="desktopMcpDisplay" readonly style="min-height: 300px; background: #f5f5f5; cursor: default; font-size: 12px;"></textarea>
+            </div>
+            <div>
+              <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #667eea;">Claude Code MCP 서버:</label>
+              <textarea id="codeMcpDisplay" readonly style="min-height: 300px; background: #f5f5f5; cursor: default; font-size: 12px;"></textarea>
+            </div>
+          </div>
+
+          <div id="syncActions" style="display: none; margin-top: 20px;">
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+              <h4 style="margin: 0 0 10px 0; color: #856404;">🔄 양방향 동기화</h4>
+              <p style="margin: 5px 0; color: #856404; font-size: 14px;">각 서버를 선택하여 원하는 방향으로 복사할 수 있습니다</p>
+            </div>
+
+            <!-- Desktop to Code -->
+            <div id="desktopToCodeSection" style="margin-bottom: 25px; display: none;">
+              <div style="background: #e3f2fd; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                <h5 style="margin: 0; color: #1565c0;">📱 Desktop → Code (Desktop에만 있는 서버)</h5>
+              </div>
+              <div id="desktopOnlyServers" style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                <!-- Desktop-only servers with checkboxes -->
+              </div>
+              <button class="btn" onclick="syncDesktopToCode()" id="syncDesktopToCodeBtn" style="display: none; background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);">
+                ➡️ 선택한 서버를 Claude Code에 추가
+              </button>
+            </div>
+
+            <!-- Code to Desktop -->
+            <div id="codeToDesktopSection" style="margin-bottom: 25px; display: none;">
+              <div style="background: #f3e5f5; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                <h5 style="margin: 0; color: #6a1b9a;">💻 Code → Desktop (Code에만 있는 서버)</h5>
+              </div>
+              <div id="codeOnlyServers" style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                <!-- Code-only servers with checkboxes -->
+              </div>
+              <button class="btn" onclick="syncCodeToDesktop()" id="syncCodeToDesktopBtn" style="display: none; background: linear-gradient(135deg, #ab47bc 0%, #6a1b9a 100%);">
+                ⬅️ 선택한 서버를 Claude Desktop에 추가
+              </button>
+            </div>
+
+            <!-- Common servers info -->
+            <div id="commonServersSection" style="display: none;">
+              <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                <h5 style="margin: 0; color: #2e7d32;">✓ 양쪽에 모두 있는 서버</h5>
+              </div>
+              <div id="commonServers" style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                <!-- Common servers list -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -798,8 +1056,14 @@
         document.getElementById('upload-tab').classList.add('active');
       } else if (tab === 'mcp') {
         document.getElementById('mcp-tab').classList.add('active');
-      } else if (tab === 'claude') {
-        document.getElementById('claude-tab').classList.add('active');
+      } else if (tab === 'claudeCode') {
+        document.getElementById('claudeCode-tab').classList.add('active');
+      } else if (tab === 'claudeDesktop') {
+        document.getElementById('claudeDesktop-tab').classList.add('active');
+      } else if (tab === 'sync') {
+        document.getElementById('sync-tab').classList.add('active');
+      } else if (tab === 'extensions') {
+        document.getElementById('extensions-tab').classList.add('active');
       }
     }
 
@@ -1039,6 +1303,212 @@
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+    }
+
+    // Environment variable JSON file handling
+    let loadedEnvData = null;
+
+    function handleEnvFileDragOver(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const dropZone = document.getElementById('envFileDropZone');
+      dropZone.style.borderColor = '#667eea';
+      dropZone.style.background = 'rgba(102, 126, 234, 0.1)';
+    }
+
+    function handleEnvFileDragLeave(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const dropZone = document.getElementById('envFileDropZone');
+      dropZone.style.borderColor = '#2196F3';
+      dropZone.style.background = 'rgba(33, 150, 243, 0.05)';
+    }
+
+    function handleEnvFileDrop(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const dropZone = document.getElementById('envFileDropZone');
+      dropZone.style.borderColor = '#2196F3';
+      dropZone.style.background = 'rgba(33, 150, 243, 0.05)';
+
+      const files = event.dataTransfer.files;
+      if (files.length > 0) {
+        processEnvFile(files[0]);
+      }
+    }
+
+    function handleEnvFileSelect(event) {
+      const files = event.target.files;
+      if (files.length > 0) {
+        processEnvFile(files[0]);
+      }
+    }
+
+    function processEnvFile(file) {
+      if (!file.name.endsWith('.json')) {
+        showError('JSON 파일만 업로드 가능합니다');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+
+          // Check if this is a Google OAuth client_secret.json format
+          let processedData = data;
+          let isClientSecret = false;
+
+          if (data.web || data.installed) {
+            // This is a client_secret.json file from Google Cloud Console
+            isClientSecret = true;
+            const clientData = data.web || data.installed;
+
+            // Extract project_id for account identifier
+            let accountId = '';
+            if (clientData.project_id) {
+              accountId = clientData.project_id;
+              const accountIdentifierInput = document.getElementById('accountIdentifier');
+              if (accountIdentifierInput) {
+                accountIdentifierInput.value = accountId;
+              }
+            }
+
+            // Determine USER_GOOGLE_EMAIL from filename or account ID
+            let userEmail = '';
+            if (file.name.includes('intenet')) {
+              const match = file.name.match(/(intenet\d+)/);
+              if (match) {
+                userEmail = match[1] + '@gmail.com';
+              }
+            } else if (accountId) {
+              // Try to extract email hint from project_id
+              userEmail = ''; // User will need to fill this
+            }
+
+            // For workspace-mcp, prepare env config
+            processedData = {
+              GOOGLE_CLIENT_SECRET_PATH: '', // Will be filled after saving
+              USER_GOOGLE_EMAIL: userEmail,
+              WORKSPACE_MCP_PORT: '', // Will be auto-assigned
+              OAUTHLIB_INSECURE_TRANSPORT: 'true',
+              _needsSave: true // Flag to indicate we need to save the file first
+            };
+
+            console.log('Detected client_secret.json format');
+            console.log('Project ID:', clientData.project_id);
+            console.log('User Email (detected):', userEmail);
+          } else {
+            // Regular env config JSON
+            // Auto-fill account identifier from project_id
+            if (data.project_id || data.PROJECT_ID || data.projectId) {
+              const projectId = data.project_id || data.PROJECT_ID || data.projectId;
+              const accountIdentifierInput = document.getElementById('accountIdentifier');
+              if (accountIdentifierInput) {
+                accountIdentifierInput.value = projectId;
+              }
+            }
+          }
+
+          loadedEnvData = processedData;
+          loadedEnvData._isClientSecret = isClientSecret;
+          loadedEnvData._originalFile = file;
+          loadedEnvData._originalData = data;
+
+          // Display loaded file info
+          document.getElementById('envFileName').textContent = file.name +
+            (isClientSecret ? ' (OAuth 클라이언트 시크릿)' : '');
+          document.getElementById('envFileInfo').style.display = 'block';
+
+          // Auto-fill user config fields if they exist
+          if (selectedExtension && selectedExtension.userConfig) {
+            autoFillUserConfigFromEnv(processedData);
+          }
+
+        } catch (error) {
+          showError('JSON 파싱 오류: ' + error.message);
+          loadedEnvData = null;
+        }
+      };
+
+      reader.onerror = function() {
+        showError('파일 읽기 오류');
+        loadedEnvData = null;
+      };
+
+      reader.readAsText(file);
+    }
+
+    function autoFillUserConfigFromEnv(envData) {
+      if (!selectedExtension || !selectedExtension.userConfig) {
+        console.log('Cannot auto-fill: No extension selected or no userConfig');
+        return;
+      }
+
+      console.log('Auto-filling from env data:', envData);
+      console.log('User config fields:', Object.keys(selectedExtension.userConfig));
+
+      Object.keys(selectedExtension.userConfig).forEach(key => {
+        console.log('Checking field:', key, 'Value in env:', envData[key]);
+
+        if (envData.hasOwnProperty(key)) {
+          const fieldId = 'env_' + key.replace(/[^a-zA-Z0-9]/g, '_');
+          const inputElement = document.getElementById(fieldId);
+
+          console.log('Field ID:', fieldId, 'Element found:', !!inputElement);
+
+          if (inputElement) {
+            if (inputElement.type === 'checkbox') {
+              inputElement.checked = !!envData[key];
+              console.log('Set checkbox to:', !!envData[key]);
+            } else {
+              inputElement.value = envData[key];
+              console.log('Set input value to:', envData[key]);
+            }
+          } else {
+            console.warn('Input element not found for:', fieldId);
+          }
+        }
+      });
+
+      // Force update the MCP config preview
+      updateMcpConfigPreview();
+    }
+
+    function updateMcpConfigPreview() {
+      if (!selectedExtension || !generatedMcpConfig) return;
+
+      // Collect current user config values
+      const envValues = collectUserConfigValues();
+
+      // Clone the generated config
+      const updatedConfig = JSON.parse(JSON.stringify(generatedMcpConfig));
+
+      // Update env values in the config
+      if (updatedConfig.env) {
+        Object.keys(envValues).forEach(key => {
+          if (updatedConfig.env.hasOwnProperty(key) || envValues[key]) {
+            updatedConfig.env[key] = envValues[key];
+          }
+        });
+      }
+
+      // Get account identifier
+      const accountId = document.getElementById('accountIdentifier').value.trim();
+      const serverName = accountId ? selectedExtension.name + '-' + accountId : selectedExtension.name;
+
+      // Update preview
+      document.getElementById('mcpConfigDisplay').value = JSON.stringify({
+        [serverName]: updatedConfig
+      }, null, 2);
+
+      console.log('Updated MCP config preview with values:', envValues);
+    }
+
+    function clearEnvFile() {
+      loadedEnvData = null;
+      document.getElementById('envFileInfo').style.display = 'none';
+      document.getElementById('envFileInput').value = '';
     }
 
     // Electron에서 파일을 열었을 때 처리
@@ -1438,14 +1908,90 @@
       }
     });
 
-    // Claude Config functions
+    // Claude Code Config functions
     let claudeConfigData = null;
     let claudeServerNameMap = {};
     let claudeConfigPath = '';
 
-    async function loadClaudeConfig() {
+    // Claude Desktop Config functions
+    let claudeDesktopConfigData = null;
+    let claudeDesktopServerNameMap = {};
+    let claudeDesktopConfigPath = '';
+
+    // MCP Sync functions
+    let desktopConfigData = null;
+    let codeConfigData = null;
+    let missingServers = [];
+    let desktopConfigPath = '';
+    let codeConfigPath = '';
+
+    // Extensions Sync functions
+    let scannedExtensions = [];
+    let selectedExtension = null;
+    let generatedMcpConfig = null;
+
+    // Helper function to scroll textarea to the last server entry
+    function scrollToLastServer(textarea) {
+      try {
+        const content = textarea.value;
+        const lines = content.split('\n');
+
+        // Strategy: Find the last server by looking for the pattern of closing braces
+        // A server ends with ] followed by } on the next line or same line
+        let lastServerEndLine = -1;
+        let bracketCount = 0;
+        let inMcpServers = false;
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+
+          if (line.includes('"mcpServers"')) {
+            inMcpServers = true;
+            continue;
+          }
+
+          if (inMcpServers) {
+            // Count braces to track nesting
+            const openBraces = (line.match(/{/g) || []).length;
+            const closeBraces = (line.match(/}/g) || []).length;
+            bracketCount += openBraces - closeBraces;
+
+            // Look for end of args array (closing bracket)
+            if (line.includes(']')) {
+              // This could be the end of a server's args
+              // Check if next line or current line has closing brace
+              const nextLine = i + 1 < lines.length ? lines[i + 1].trim() : '';
+              if (line.includes('}') || nextLine.startsWith('}')) {
+                lastServerEndLine = i;
+              }
+            }
+
+            // If we've closed all braces, we're done with mcpServers
+            if (bracketCount <= 0 && i > 5) {
+              break;
+            }
+          }
+        }
+
+        if (lastServerEndLine > 0) {
+          // Scroll to show the last server - position it in the middle of viewport
+          const lineHeight = 20;
+          const textareaHeight = textarea.clientHeight;
+          const scrollPosition = Math.max(0, (lastServerEndLine * lineHeight) - (textareaHeight / 2));
+
+          textarea.scrollTop = scrollPosition;
+
+          console.log(`Auto-scrolled to last server at line ${lastServerEndLine}`);
+          console.log(`Server name on nearby lines:`, lines.slice(Math.max(0, lastServerEndLine - 5), lastServerEndLine + 2).join('\n'));
+        }
+      } catch (error) {
+        console.error('Error scrolling to last server:', error);
+      }
+    }
+
+    async function loadClaudeCodeConfig() {
       if (!window.electronAPI || !window.electronAPI.loadClaudeConfig) {
-        showError('Claude Config 불러오기는 Electron 앱에서만 사용할 수 있습니다.');
+        showError('Claude Code Config 불러오기는 Electron 앱에서만 사용할 수 있습니다.');
         return;
       }
 
@@ -1457,59 +2003,40 @@
           claudeConfigPath = result.path;
 
           // Update path display
-          document.getElementById('claudeConfigPath').textContent = claudeConfigPath;
-
-          // Find user home directory
-          const homeDir = Object.keys(claudeConfigData).find(key =>
-            key.startsWith('/Users/') ||
-            key.startsWith('/home/') ||
-            key.match(/^[A-Z]:\\Users\\/)
-          );
-
-          // Count servers - handle all possible nested structures
-          let serverCount = 0;
-          let userMcpServers = {};
-
-          function countServersRecursively(obj, path = []) {
-            if (!obj || typeof obj !== 'object') return;
-
-            // Check if this object contains mcpServers
-            if (obj.mcpServers && typeof obj.mcpServers === 'object') {
-              const servers = obj.mcpServers;
-
-              // Check if mcpServers contains actual server definitions or more nested structures
-              const firstKey = Object.keys(servers)[0];
-              if (firstKey) {
-                const firstValue = servers[firstKey];
-
-                // If first value has 'type' or 'command', it's a server definition
-                if (firstValue && (firstValue.type || firstValue.command)) {
-                  // This is actual server list
-                  serverCount += Object.keys(servers).length;
-                  // If this is the user's home directory, save it
-                  if (path.length > 0 && path[0] === homeDir) {
-                    userMcpServers = servers;
-                  }
-                  console.log(`Found ${Object.keys(servers).length} servers at path: ${path.join(' -> ')}`);
-                } else {
-                  // This might be another nested level, recurse
-                  Object.keys(servers).forEach(key => {
-                    countServersRecursively(servers[key], [...path, 'mcpServers', key]);
-                  });
-                }
-              }
-            }
-
-            // Also check direct children for nested structures
-            Object.keys(obj).forEach(key => {
-              if (key !== 'mcpServers' && typeof obj[key] === 'object') {
-                countServersRecursively(obj[key], [...path, key]);
-              }
-            });
+          const pathElement = document.getElementById('claudeCodeConfigPath');
+          if (pathElement) {
+            pathElement.textContent = claudeConfigPath;
           }
 
-          countServersRecursively(claudeConfigData);
-          document.getElementById('claudeServerCount').textContent = serverCount;
+          // Find user home directory in projects object (exact match, not subdirectories)
+          const projects = claudeConfigData.projects || {};
+          const homeDir = Object.keys(projects).find(key =>
+            // Match only the home directory itself, not subdirectories
+            key.match(/^\/Users\/[^\/]+$/) ||
+            key.match(/^\/home\/[^\/]+$/) ||
+            key.match(/^[A-Z]:\\Users\\[^\\]+$/)
+          );
+
+          console.log('Home directory found:', homeDir);
+          console.log('Projects keys:', Object.keys(projects));
+
+          // Get user's mcpServers from projects
+          let userMcpServers = {};
+          let serverCount = 0;
+
+          if (homeDir && projects[homeDir] && projects[homeDir].mcpServers) {
+            userMcpServers = projects[homeDir].mcpServers;
+            serverCount = Object.keys(userMcpServers).length;
+            console.log('Found servers at', homeDir, ':', Object.keys(userMcpServers));
+          } else {
+            console.warn('Could not find mcpServers at expected location');
+            console.log('Available projects:', Object.keys(projects));
+          }
+
+          const serverCountElement = document.getElementById('claudeServerCount');
+          if (serverCountElement) {
+            serverCountElement.textContent = serverCount;
+          }
           console.log(`Total MCP servers found: ${serverCount}`);
 
           // Display only user's mcpServers instead of full config
@@ -1517,11 +2044,22 @@
             ? { mcpServers: userMcpServers }
             : { mcpServers: {} };
 
-          document.getElementById('claudeConfigDisplay').value = JSON.stringify(displayData, null, 2);
+          const displayTextarea = document.getElementById('claudeConfigDisplay');
+          displayTextarea.value = JSON.stringify(displayData, null, 2);
+
+          // Auto-scroll to the last server entry if servers exist
+          if (serverCount > 0) {
+            setTimeout(() => {
+              scrollToLastServer(displayTextarea);
+            }, 100);
+          }
 
           // Show the config section
           document.getElementById('claudeConfigSection').style.display = 'block';
           document.getElementById('refreshClaudeBtn').style.display = 'inline-block';
+
+          // Check authentication status
+          await checkAuthStatus();
 
         } else {
           showError('Claude Config 불러오기 실패: ' + result.error);
@@ -1531,8 +2069,319 @@
       }
     }
 
-    async function refreshClaudeConfig() {
-      await loadClaudeConfig();
+    async function checkAuthStatus() {
+      if (!claudeConfigData) {
+        return;
+      }
+
+      try {
+        // Find user home directory in projects object
+        const projects = claudeConfigData.projects || {};
+        const homeDir = Object.keys(projects).find(key =>
+          key.match(/^\/Users\/[^\/]+$/) ||
+          key.match(/^\/home\/[^\/]+$/) ||
+          key.match(/^[A-Z]:\\Users\\[^\\]+$/)
+        );
+
+        if (!homeDir || !projects[homeDir] || !projects[homeDir].mcpServers) {
+          document.getElementById('authStatusList').innerHTML = '<p style="color: #666; font-size: 14px;">MCP 서버가 없습니다</p>';
+          return;
+        }
+
+        const mcpServers = projects[homeDir].mcpServers;
+
+        // Call API to check authentication status
+        const response = await fetch('/api/check-auth-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mcpServers })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          displayAuthStatus(result.authStatus);
+        } else {
+          showError('인증 상태 확인 실패: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        showError('인증 상태 확인 오류: ' + error.message);
+      }
+    }
+
+    function displayAuthStatus(authStatus) {
+      const authList = document.getElementById('authStatusList');
+      const servers = Object.keys(authStatus);
+
+      if (servers.length === 0) {
+        authList.innerHTML = `
+          <div style="background: #e8f5e9; padding: 15px; border-radius: 6px; text-align: center;">
+            <p style="color: #2e7d32; font-size: 14px; margin: 0;">
+              ✓ Google 인증이 필요한 MCP 서버가 없습니다
+            </p>
+            <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">
+              (workspace, google, gmail, drive 등의 키워드를 포함한 서버만 표시됩니다)
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+
+      servers.forEach(serverName => {
+        const status = authStatus[serverName];
+        const isAuthenticated = status.authenticated;
+        const email = status.email || 'N/A';
+        const hasEmail = email !== 'N/A';
+
+        let bgColor, textColor, statusIcon, statusText;
+
+        if (!hasEmail) {
+          // No email configured
+          bgColor = '#fff3cd';
+          textColor = '#856404';
+          statusIcon = '⚠️';
+          statusText = '이메일 미설정';
+        } else if (isAuthenticated) {
+          // Authenticated
+          bgColor = '#d4edda';
+          textColor = '#155724';
+          statusIcon = '✓';
+          statusText = '인증됨';
+        } else {
+          // Email set but not authenticated
+          bgColor = '#f8d7da';
+          textColor = '#721c24';
+          statusIcon = '✗';
+          statusText = '인증 필요';
+        }
+
+        html += `
+          <div style="background: ${bgColor}; padding: 12px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                <strong style="color: ${textColor};">${escapeHtml(serverName)}</strong>
+                <span style="background: ${textColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">
+                  ${statusIcon} ${statusText}
+                </span>
+              </div>
+              <div style="color: #666; font-size: 13px;">
+                📧 ${escapeHtml(email)}
+                ${!hasEmail ? '<span style="color: #999; font-style: italic;"> - Config에서 user_google_email 환경변수를 추가하세요</span>' : ''}
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              ${!hasEmail ? `
+                <button onclick="addEmailAndAuth('${escapeHtml(serverName)}')"
+                  style="background: #ffc107; color: #333; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold;">
+                  📧 이메일 추가 & 인증
+                </button>
+              ` : !isAuthenticated ? `
+                <button onclick="startAuth('${escapeHtml(email)}', '${escapeHtml(serverName)}')"
+                  style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 13px;">
+                  🔑 인증 시작
+                </button>
+              ` : `
+                <button onclick="deleteAuth('${escapeHtml(email)}')"
+                  style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 13px;">
+                  🗑️ 인증 삭제
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      authList.innerHTML = html;
+    }
+
+    async function addEmailAndAuth(serverName) {
+      // Prompt for email
+      const email = prompt(`${serverName} 서버의 Google 계정 이메일을 입력하세요:`, '');
+
+      if (!email) {
+        return; // User cancelled
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert('올바른 이메일 형식이 아닙니다.');
+        return;
+      }
+
+      if (!claudeConfigData || !claudeConfigPath) {
+        showError('Claude Config를 먼저 불러오세요');
+        return;
+      }
+
+      try {
+        // Find user home directory in projects object
+        const projects = claudeConfigData.projects || {};
+        const homeDir = Object.keys(projects).find(key =>
+          key.match(/^\/Users\/[^\/]+$/) ||
+          key.match(/^\/home\/[^\/]+$/) ||
+          key.match(/^[A-Z]:\\Users\\[^\\]+$/)
+        );
+
+        if (!homeDir || !projects[homeDir] || !projects[homeDir].mcpServers || !projects[homeDir].mcpServers[serverName]) {
+          showError('서버를 찾을 수 없습니다');
+          return;
+        }
+
+        // Add email to server config
+        if (!projects[homeDir].mcpServers[serverName].env) {
+          projects[homeDir].mcpServers[serverName].env = {};
+        }
+        projects[homeDir].mcpServers[serverName].env.user_google_email = email;
+
+        // Save updated config
+        if (!window.electronAPI || !window.electronAPI.saveClaudeConfig) {
+          showError('Claude Config 저장은 Electron 앱에서만 사용할 수 있습니다.');
+          return;
+        }
+
+        const saveResult = await window.electronAPI.saveClaudeConfig({
+          path: claudeConfigPath,
+          data: claudeConfigData
+        });
+
+        if (saveResult.success) {
+          // Refresh config display
+          await checkAuthStatus();
+
+          // Show success message
+          alert(`✓ ${email}을(를) ${serverName} 서버에 추가했습니다.\n\n이제 인증을 진행합니다.`);
+
+          // Start authentication
+          await startAuth(email, serverName);
+        } else {
+          showError('Config 저장 실패: ' + saveResult.error);
+        }
+      } catch (error) {
+        console.error('Error adding email:', error);
+        showError('이메일 추가 오류: ' + error.message);
+      }
+    }
+
+    async function startAuth(email, serverName) {
+      try {
+        const response = await fetch('/api/start-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, serverName })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          if (result.needsClientSecret) {
+            alert(result.message + '\n\n"Google OAuth 설정" 탭에서 client_secret.json을 먼저 설정해주세요.');
+            // Switch to OAuth tab
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector('[data-tab="oauth"]').classList.add('active');
+            document.getElementById('oauth-tab').classList.add('active');
+          } else if (result.authUrl) {
+            // Open auth URL in browser
+            const confirmed = confirm(
+              `${email} 계정의 Google 인증 페이지를 브라우저로 엽니다.\n\n` +
+              `1. Google 계정으로 로그인하세요\n` +
+              `2. 권한을 승인하세요\n` +
+              `3. 리다이렉트 URL에서 "code=" 뒤의 코드를 복사하세요\n` +
+              `4. 다음 화면에서 코드를 입력하세요\n\n` +
+              `계속하시겠습니까?`
+            );
+
+            if (confirmed) {
+              // Open auth URL
+              window.open(result.authUrl, '_blank');
+
+              // Wait a moment, then prompt for code
+              setTimeout(async () => {
+                const code = prompt(
+                  `Google 인증을 완료한 후, 리다이렉트 URL에서 "code=" 뒤의 인증 코드를 입력하세요:\n\n` +
+                  `예: http://localhost/?code=4/0AY0e-g7... ← 이 부분을 복사하세요`,
+                  ''
+                );
+
+                if (code) {
+                  await exchangeAuthCode(code, email, result.redirectUri);
+                }
+              }, 2000);
+            }
+          } else {
+            alert(`${email} 계정의 인증을 시작합니다.\n\n` +
+                  `다음 단계:\n` +
+                  `1. 터미널에서 MCP 서버를 실행하세요\n` +
+                  `2. 생성된 인증 URL을 브라우저에서 열어주세요\n` +
+                  `3. Google 계정으로 로그인하고 권한을 승인하세요\n` +
+                  `4. 완료되면 이 화면에서 "새로고침" 버튼을 눌러주세요`);
+          }
+        } else {
+          showError('인증 시작 실패: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error starting auth:', error);
+        showError('인증 시작 오류: ' + error.message);
+      }
+    }
+
+    async function exchangeAuthCode(code, email, redirectUri) {
+      try {
+        const response = await fetch('/api/exchange-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, email, redirectUri })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert(`✓ ${email} 계정의 인증이 완료되었습니다!\n\n토큰이 저장되었습니다: ${result.tokenPath}`);
+
+          // Refresh authentication status
+          await checkAuthStatus();
+        } else {
+          showError('토큰 교환 실패: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error exchanging code:', error);
+        showError('토큰 교환 오류: ' + error.message);
+      }
+    }
+
+    async function deleteAuth(email) {
+      if (!confirm(`${email} 계정의 인증 토큰을 삭제하시겠습니까?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/delete-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert(result.message);
+          await checkAuthStatus(); // Refresh status
+        } else {
+          showError('인증 삭제 실패: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Error deleting auth:', error);
+        showError('인증 삭제 오류: ' + error.message);
+      }
+    }
+
+    async function refreshClaudeCodeConfig() {
+      await loadClaudeCodeConfig();
 
       // Clear the new servers input
       document.getElementById('claudeNewMcpInput').value = '';
@@ -1555,9 +2404,9 @@
       }, 2000);
     }
 
-    function analyzeClaudeServers() {
+    function analyzeClaudeCodeServers() {
       if (!claudeConfigData) {
-        showError('먼저 Claude Config를 불러오세요');
+        showError('먼저 Claude Code Config를 불러오세요');
         return;
       }
 
@@ -1572,10 +2421,11 @@
         const newServers = JSON.parse(newInput);
 
         // Find the user directory key to show where servers will be added
-        const homeDir = Object.keys(claudeConfigData).find(key =>
-          key.startsWith('/Users/') ||
-          key.startsWith('/home/') ||
-          key.match(/^[A-Z]:\\Users\\/)
+        const projects = claudeConfigData.projects || {};
+        const homeDir = Object.keys(projects).find(key =>
+          key.match(/^\/Users\/[^\/]+$/) ||
+          key.match(/^\/home\/[^\/]+$/) ||
+          key.match(/^[A-Z]:\\Users\\[^\\]+$/)
         );
 
         if (homeDir) {
@@ -1632,14 +2482,14 @@
       }
     }
 
-    async function mergeClaudeServers() {
+    async function mergeClaudeCodeServers() {
       if (!claudeConfigData) {
-        showError('먼저 Claude Config를 불러오세요');
+        showError('먼저 Claude Code Config를 불러오세요');
         return;
       }
 
       if (!window.electronAPI || !window.electronAPI.saveClaudeConfig) {
-        showError('Claude Config 저장은 Electron 앱에서만 사용할 수 있습니다.');
+        showError('Claude Code Config 저장은 Electron 앱에서만 사용할 수 있습니다.');
         return;
       }
 
@@ -1663,22 +2513,21 @@
           }
         });
 
-        // Find the user directory key (e.g., "/Users/gwanli")
-        // Look for keys that look like home directories
-        const homeDir = Object.keys(claudeConfigData).find(key =>
-          key.startsWith('/Users/') ||
-          key.startsWith('/home/') ||
-          key.match(/^[A-Z]:\\Users\\/) ||
-          key === claudeConfigPath.split('/').slice(0, 3).join('/')
+        // Find the user directory key in projects object
+        const projects = claudeConfigData.projects || {};
+        const homeDir = Object.keys(projects).find(key =>
+          key.match(/^\/Users\/[^\/]+$/) ||
+          key.match(/^\/home\/[^\/]+$/) ||
+          key.match(/^[A-Z]:\\Users\\[^\\]+$/)
         );
 
         console.log('Home directory detected:', homeDir);
-        console.log('Available keys in config:', Object.keys(claudeConfigData));
+        console.log('Available projects:', Object.keys(projects));
 
         // Prepare the existing config (user directory level)
         let existingConfig = {};
-        if (homeDir && claudeConfigData[homeDir]) {
-          existingConfig = claudeConfigData[homeDir];
+        if (homeDir && projects[homeDir]) {
+          existingConfig = projects[homeDir];
           console.log('Using existing config from:', homeDir);
         } else {
           console.warn('Could not find home directory in config, will use empty config');
@@ -1696,20 +2545,23 @@
         .then(response => response.json())
         .then(async data => {
           if (data.success) {
-            // Update only the mcpServers at user directory level, preserving other fields
+            // Update only the mcpServers in projects object, preserving other fields
             if (homeDir) {
-              if (!claudeConfigData[homeDir]) {
-                claudeConfigData[homeDir] = {};
+              if (!claudeConfigData.projects) {
+                claudeConfigData.projects = {};
+              }
+              if (!claudeConfigData.projects[homeDir]) {
+                claudeConfigData.projects[homeDir] = {};
               }
               // Merge only mcpServers, keep other fields intact
               if (data.data.mcpServers) {
-                claudeConfigData[homeDir].mcpServers = data.data.mcpServers;
+                claudeConfigData.projects[homeDir].mcpServers = data.data.mcpServers;
               } else {
                 // If returned data doesn't have mcpServers wrapper, it's the servers directly
-                claudeConfigData[homeDir].mcpServers = data.data;
+                claudeConfigData.projects[homeDir].mcpServers = data.data;
               }
               console.log('Updated mcpServers at:', homeDir);
-              console.log('New server count:', Object.keys(claudeConfigData[homeDir].mcpServers).length);
+              console.log('New server count:', Object.keys(claudeConfigData.projects[homeDir].mcpServers).length);
             }
 
             // Save the merged config back to file
@@ -1721,52 +2573,41 @@
             if (saveResult.success) {
               // claudeConfigData is already updated with the full config including other keys
 
-              // Recount servers and get user's mcpServers
-              let serverCount = 0;
-              let userMcpServers = {};
-
-              // Find home directory
-              const homeDir = Object.keys(claudeConfigData).find(key =>
-                key.startsWith('/Users/') ||
-                key.startsWith('/home/') ||
-                key.match(/^[A-Z]:\\Users\\/)
+              // Recount servers and get user's mcpServers from projects
+              const projects = claudeConfigData.projects || {};
+              const homeDir = Object.keys(projects).find(key =>
+                key.match(/^\/Users\/[^\/]+$/) ||
+                key.match(/^\/home\/[^\/]+$/) ||
+                key.match(/^[A-Z]:\\Users\\[^\\]+$/)
               );
 
-              function countServersRecursively(obj, path = []) {
-                if (!obj || typeof obj !== 'object') return;
-                if (obj.mcpServers && typeof obj.mcpServers === 'object') {
-                  const servers = obj.mcpServers;
-                  const firstKey = Object.keys(servers)[0];
-                  if (firstKey) {
-                    const firstValue = servers[firstKey];
-                    if (firstValue && (firstValue.type || firstValue.command)) {
-                      serverCount += Object.keys(servers).length;
-                      // If this is the user's home directory, save it
-                      if (path.length > 0 && path[0] === homeDir) {
-                        userMcpServers = servers;
-                      }
-                    } else {
-                      Object.keys(servers).forEach(key => {
-                        countServersRecursively(servers[key], [...path, 'mcpServers', key]);
-                      });
-                    }
-                  }
-                }
-                Object.keys(obj).forEach(key => {
-                  if (key !== 'mcpServers' && typeof obj[key] === 'object') {
-                    countServersRecursively(obj[key], [...path, key]);
-                  }
-                });
+              let userMcpServers = {};
+              let serverCount = 0;
+
+              if (homeDir && projects[homeDir] && projects[homeDir].mcpServers) {
+                userMcpServers = projects[homeDir].mcpServers;
+                serverCount = Object.keys(userMcpServers).length;
               }
-              countServersRecursively(claudeConfigData);
-              document.getElementById('claudeServerCount').textContent = serverCount;
+
+              const serverCountElement2 = document.getElementById('claudeServerCount');
+              if (serverCountElement2) {
+                serverCountElement2.textContent = serverCount;
+              }
 
               // Update display with only user's mcpServers
               const displayData = userMcpServers && Object.keys(userMcpServers).length > 0
                 ? { mcpServers: userMcpServers }
                 : { mcpServers: {} };
 
-              document.getElementById('claudeConfigDisplay').value = JSON.stringify(displayData, null, 2);
+              const displayTextarea = document.getElementById('claudeConfigDisplay');
+              displayTextarea.value = JSON.stringify(displayData, null, 2);
+
+              // Auto-scroll to the last server entry
+              if (serverCount > 0) {
+                setTimeout(() => {
+                  scrollToLastServer(displayTextarea);
+                }, 100);
+              }
 
               // Display the merged result
               displayJSON(data.data);
@@ -1805,6 +2646,1258 @@
         .catch(error => showError('오류: ' + error.message));
       } catch (error) {
         showError('JSON 파싱 오류: ' + error.message);
+      }
+    }
+
+    // Claude Desktop Config Manager functions
+    async function loadClaudeDesktopConfig() {
+      if (!window.electronAPI || !window.electronAPI.loadClaudeDesktopConfig) {
+        showError('Claude Desktop Config 불러오기는 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      try {
+        const result = await window.electronAPI.loadClaudeDesktopConfig();
+
+        if (result.success) {
+          claudeDesktopConfigData = result.data;
+          claudeDesktopConfigPath = result.path;
+
+          // Update path display
+          document.getElementById('claudeDesktopConfigPath').textContent = claudeDesktopConfigPath;
+
+          // Get MCP servers directly from config
+          const mcpServers = claudeDesktopConfigData.mcpServers || {};
+          const serverCount = Object.keys(mcpServers).length;
+
+          document.getElementById('claudeDesktopServerCount').textContent = serverCount;
+          console.log(`Total Claude Desktop MCP servers found: ${serverCount}`);
+
+          // Display mcpServers
+          const displayData = { mcpServers: mcpServers };
+          const displayTextarea = document.getElementById('claudeDesktopConfigDisplay');
+          displayTextarea.value = JSON.stringify(displayData, null, 2);
+
+          // Auto-scroll to the last server entry if servers exist
+          if (serverCount > 0) {
+            setTimeout(() => {
+              scrollToLastServer(displayTextarea);
+            }, 100);
+          }
+
+          // Show the config section
+          document.getElementById('claudeDesktopConfigSection').style.display = 'block';
+          document.getElementById('refreshClaudeDesktopBtn').style.display = 'inline-block';
+
+        } else {
+          showError('Claude Desktop Config 불러오기 실패: ' + result.error);
+        }
+      } catch (error) {
+        showError('오류: ' + error.message);
+      }
+    }
+
+    async function refreshClaudeDesktopConfig() {
+      await loadClaudeDesktopConfig();
+
+      // Clear the new servers input
+      document.getElementById('claudeDesktopNewMcpInput').value = '';
+
+      // Hide server name section
+      document.getElementById('claudeDesktopServerNameSection').style.display = 'none';
+      document.getElementById('claudeDesktopMergeBtn').style.display = 'none';
+
+      // Show success message
+      const tempMessage = document.createElement('div');
+      tempMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; animation: fadeIn 0.3s;';
+      tempMessage.textContent = '✓ Claude Desktop Config를 새로고침했습니다';
+      document.body.appendChild(tempMessage);
+
+      setTimeout(() => {
+        tempMessage.style.animation = 'fadeOut 0.3s';
+        setTimeout(() => {
+          document.body.removeChild(tempMessage);
+        }, 300);
+      }, 2000);
+    }
+
+    function analyzeClaudeDesktopServers() {
+      if (!claudeDesktopConfigData) {
+        showError('먼저 Claude Desktop Config를 불러오세요');
+        return;
+      }
+
+      const newInput = document.getElementById('claudeDesktopNewMcpInput').value.trim();
+
+      if (!newInput) {
+        showError('추가할 서버 JSON을 입력하세요');
+        return;
+      }
+
+      try {
+        const newServers = JSON.parse(newInput);
+
+        // Extract server names from new servers
+        const serversToAdd = newServers.mcpServers || newServers;
+        const serverNames = Object.keys(serversToAdd);
+
+        if (serverNames.length === 0) {
+          showError('추가할 서버가 없습니다');
+          return;
+        }
+
+        // Show server name mapping section
+        const serverNameSection = document.getElementById('claudeDesktopServerNameSection');
+        const serverNameMapping = document.getElementById('claudeDesktopServerNameMapping');
+
+        serverNameMapping.innerHTML = serverNames.map(name => `
+          <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+            <span style="min-width: 150px; font-weight: bold;">${escapeHtml(name)}:</span>
+            <input type="text"
+                   id="claudeDesktop-rename-${escapeHtml(name)}"
+                   value="${escapeHtml(name)}"
+                   placeholder="새 서버명 (선택사항)"
+                   style="flex: 1; padding: 8px; border: 2px solid #e0e0e0; border-radius: 5px;">
+          </div>
+        `).join('');
+
+        serverNameSection.style.display = 'block';
+        document.getElementById('claudeDesktopMergeBtn').style.display = 'inline-block';
+
+        // Initialize name map
+        claudeDesktopServerNameMap = {};
+        serverNames.forEach(name => {
+          claudeDesktopServerNameMap[name] = name;
+        });
+
+      } catch (error) {
+        showError('JSON 파싱 오류: ' + error.message);
+      }
+    }
+
+    async function mergeClaudeDesktopServers() {
+      if (!claudeDesktopConfigData) {
+        showError('먼저 Claude Desktop Config를 불러오세요');
+        return;
+      }
+
+      if (!window.electronAPI || !window.electronAPI.saveClaudeConfig) {
+        showError('Claude Desktop Config 저장은 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      const newInput = document.getElementById('claudeDesktopNewMcpInput').value.trim();
+
+      if (!newInput) {
+        showError('추가할 서버 JSON을 입력하세요');
+        return;
+      }
+
+      try {
+        // Collect server name mappings
+        const serverNameMap = {};
+        Object.keys(claudeDesktopServerNameMap).forEach(oldName => {
+          const inputElement = document.getElementById('claudeDesktop-rename-' + oldName);
+          if (inputElement) {
+            const newName = inputElement.value.trim();
+            if (newName && newName !== oldName) {
+              serverNameMap[oldName] = newName;
+            }
+          }
+        });
+
+        // Prepare the existing config
+        const existingConfig = claudeDesktopConfigData;
+
+        fetch('/api/merge-mcp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            existingConfig: JSON.stringify(existingConfig),
+            newServers: newInput,
+            serverNameMap: serverNameMap
+          })
+        })
+        .then(response => response.json())
+        .then(async data => {
+          if (data.success) {
+            // Update claudeDesktopConfigData with merged servers
+            if (data.data.mcpServers) {
+              claudeDesktopConfigData.mcpServers = data.data.mcpServers;
+            } else {
+              claudeDesktopConfigData.mcpServers = data.data;
+            }
+
+            console.log('Updated Claude Desktop mcpServers');
+            console.log('New server count:', Object.keys(claudeDesktopConfigData.mcpServers).length);
+
+            // Save the merged config back to file
+            const saveResult = await window.electronAPI.saveClaudeConfig({
+              path: claudeDesktopConfigPath,
+              data: claudeDesktopConfigData
+            });
+
+            if (saveResult.success) {
+              // Update display
+              const serverCount = Object.keys(claudeDesktopConfigData.mcpServers).length;
+              document.getElementById('claudeDesktopServerCount').textContent = serverCount;
+
+              const displayData = { mcpServers: claudeDesktopConfigData.mcpServers };
+              const displayTextarea = document.getElementById('claudeDesktopConfigDisplay');
+              displayTextarea.value = JSON.stringify(displayData, null, 2);
+
+              // Auto-scroll to the last server entry
+              if (serverCount > 0) {
+                setTimeout(() => {
+                  scrollToLastServer(displayTextarea);
+                }, 100);
+              }
+
+              // Display the merged result
+              displayJSON(data.data);
+
+              // Show success message
+              const resultSection = document.getElementById('resultSection');
+              const existingInfo = resultSection.querySelector('.mcp-info');
+              if (existingInfo) {
+                existingInfo.remove();
+              }
+
+              const infoDiv = document.createElement('div');
+              infoDiv.className = 'mcp-info';
+              infoDiv.style.cssText = 'background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #1565c0;';
+              infoDiv.innerHTML = `
+                <h4 style="margin: 0 0 10px 0;">✓ Claude Desktop Config 업데이트 완료</h4>
+                <p style="margin: 5px 0;"><strong>파일 경로:</strong> ${escapeHtml(claudeDesktopConfigPath)}</p>
+                <p style="margin: 5px 0;"><strong>추가된 서버:</strong> ${data.addedServers.join(', ')}</p>
+                <p style="margin: 5px 0;"><strong>전체 서버 수:</strong> ${data.totalServers}</p>
+              `;
+
+              resultSection.insertBefore(infoDiv, resultSection.querySelector('.export-section'));
+
+              // Clear inputs
+              document.getElementById('claudeDesktopNewMcpInput').value = '';
+              document.getElementById('claudeDesktopServerNameSection').style.display = 'none';
+              document.getElementById('claudeDesktopMergeBtn').style.display = 'none';
+
+            } else {
+              showError('파일 저장 실패: ' + saveResult.error);
+            }
+          } else {
+            showError('병합 오류: ' + data.error);
+          }
+        })
+        .catch(error => showError('오류: ' + error.message));
+      } catch (error) {
+        showError('JSON 파싱 오류: ' + error.message);
+      }
+    }
+
+    // MCP Sync functions
+    async function loadBothConfigs() {
+      if (!window.electronAPI || !window.electronAPI.loadClaudeDesktopConfig || !window.electronAPI.loadClaudeConfig) {
+        showError('MCP Sync 기능은 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      try {
+        // Load Claude Desktop config
+        const desktopResult = await window.electronAPI.loadClaudeDesktopConfig();
+
+        // Load Claude Code config
+        const codeResult = await window.electronAPI.loadClaudeConfig();
+
+        if (!desktopResult.success) {
+          showError('Claude Desktop 설정 불러오기 실패: ' + desktopResult.error);
+          return;
+        }
+
+        if (!codeResult.success) {
+          showError('Claude Code 설정 불러오기 실패: ' + codeResult.error);
+          return;
+        }
+
+        desktopConfigData = desktopResult.data;
+        desktopConfigPath = desktopResult.path;
+        codeConfigData = codeResult.data;
+        codeConfigPath = codeResult.path;
+
+        // Get MCP servers from both configs
+        const desktopServers = desktopConfigData.mcpServers || {};
+
+        // Get Claude Code servers from projects
+        const projects = codeConfigData.projects || {};
+        const homeDir = Object.keys(projects).find(key =>
+          key.match(/^\/Users\/[^\/]+$/) ||
+          key.match(/^\/home\/[^\/]+$/) ||
+          key.match(/^[A-Z]:\\Users\\[^\\]+$/)
+        );
+
+        const codeServers = (homeDir && projects[homeDir] && projects[homeDir].mcpServers) || {};
+
+        // Update counts
+        document.getElementById('desktopServerCount').textContent = Object.keys(desktopServers).length;
+        document.getElementById('codeServerCount').textContent = Object.keys(codeServers).length;
+
+        // Display servers
+        document.getElementById('desktopMcpDisplay').value = JSON.stringify({ mcpServers: desktopServers }, null, 2);
+        document.getElementById('codeMcpDisplay').value = JSON.stringify({ mcpServers: codeServers }, null, 2);
+
+        // Compare and show differences
+        compareServers(desktopServers, codeServers);
+
+        // Show the sync section
+        document.getElementById('syncSection').style.display = 'block';
+
+      } catch (error) {
+        showError('오류: ' + error.message);
+      }
+    }
+
+    function compareServers(desktopServers, codeServers) {
+      const desktopKeys = Object.keys(desktopServers);
+      const codeKeys = Object.keys(codeServers);
+
+      // Find servers only in Desktop
+      const onlyInDesktop = desktopKeys.filter(key => !codeKeys.includes(key));
+
+      // Find servers only in Code
+      const onlyInCode = codeKeys.filter(key => !desktopKeys.includes(key));
+
+      // Find common servers
+      const commonServers = desktopKeys.filter(key => codeKeys.includes(key));
+
+      missingServers = onlyInDesktop;
+
+      // Build comparison result HTML
+      let html = '<div style="background: #f8f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">';
+      html += '<h4 style="margin: 0 0 15px 0; color: #667eea;">📊 비교 결과</h4>';
+
+      html += '<div style="margin-bottom: 10px;">';
+      html += '<strong style="color: #4CAF50;">✓ 양쪽 모두에 있는 서버 (' + commonServers.length + '개):</strong><br>';
+      if (commonServers.length > 0) {
+        html += '<span style="color: #666; font-size: 14px;">' + commonServers.join(', ') + '</span>';
+      } else {
+        html += '<span style="color: #999; font-size: 14px;">없음</span>';
+      }
+      html += '</div>';
+
+      html += '<div style="margin-bottom: 10px;">';
+      html += '<strong style="color: #ff9800;">⚠️ Claude Desktop에만 있는 서버 (' + onlyInDesktop.length + '개):</strong><br>';
+      if (onlyInDesktop.length > 0) {
+        html += '<span style="color: #666; font-size: 14px;">' + onlyInDesktop.join(', ') + '</span>';
+      } else {
+        html += '<span style="color: #999; font-size: 14px;">없음</span>';
+      }
+      html += '</div>';
+
+      html += '<div style="margin-bottom: 0;">';
+      html += '<strong style="color: #2196F3;">ℹ️ Claude Code에만 있는 서버 (' + onlyInCode.length + '개):</strong><br>';
+      if (onlyInCode.length > 0) {
+        html += '<span style="color: #666; font-size: 14px;">' + onlyInCode.join(', ') + '</span>';
+      } else {
+        html += '<span style="color: #999; font-size: 14px;">없음</span>';
+      }
+      html += '</div>';
+
+      html += '</div>';
+
+      document.getElementById('comparisonResult').innerHTML = html;
+
+      // Show sync actions if there are differences
+      if (onlyInDesktop.length > 0 || onlyInCode.length > 0 || commonServers.length > 0) {
+        showBidirectionalSyncOptions(desktopServers, codeServers, onlyInDesktop, onlyInCode, commonServers);
+      } else {
+        document.getElementById('syncActions').style.display = 'none';
+      }
+    }
+
+    function showSyncOptions(desktopServers, onlyInDesktop) {
+      let html = '<div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">';
+      html += '<p style="margin: 0 0 10px 0; font-weight: bold; color: #667eea;">Claude Code에 추가할 서버:</p>';
+
+      onlyInDesktop.forEach(serverName => {
+        const server = desktopServers[serverName];
+        html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 5px; border: 1px solid #e0e0e0;">';
+        html += '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">';
+        html += '<input type="checkbox" id="sync-' + escapeHtml(serverName) + '" checked style="width: 18px; height: 18px;">';
+        html += '<label for="sync-' + escapeHtml(serverName) + '" style="font-weight: bold; color: #667eea; cursor: pointer;">' + escapeHtml(serverName) + '</label>';
+        html += '</div>';
+        html += '<pre style="background: #f9f9f9; padding: 8px; border-radius: 4px; font-size: 12px; margin: 0; overflow-x: auto;"><code>' + escapeHtml(JSON.stringify(server, null, 2)) + '</code></pre>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+
+      document.getElementById('missingServersSection').innerHTML = html;
+      document.getElementById('syncActions').style.display = 'block';
+      document.getElementById('syncBtn').style.display = 'inline-block';
+    }
+
+    function showBidirectionalSyncOptions(desktopServers, codeServers, onlyInDesktop, onlyInCode, commonServers) {
+      // Desktop to Code section
+      if (onlyInDesktop.length > 0) {
+        let html = '';
+        onlyInDesktop.forEach(serverName => {
+          const server = desktopServers[serverName];
+          html += '<div style="margin-bottom: 12px; padding: 12px; background: white; border-radius: 5px; border: 1px solid #e3f2fd;">';
+          html += '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">';
+          html += '<input type="checkbox" id="desktop-to-code-' + escapeHtml(serverName) + '" checked style="width: 18px; height: 18px;">';
+          html += '<label for="desktop-to-code-' + escapeHtml(serverName) + '" style="font-weight: bold; color: #1976d2; cursor: pointer; flex: 1;">' + escapeHtml(serverName) + '</label>';
+          html += '</div>';
+          html += '<pre style="background: #f9f9f9; padding: 8px; border-radius: 4px; font-size: 11px; margin: 0; overflow-x: auto; max-height: 150px;"><code>' + escapeHtml(JSON.stringify(server, null, 2)) + '</code></pre>';
+          html += '</div>';
+        });
+        document.getElementById('desktopOnlyServers').innerHTML = html;
+        document.getElementById('desktopToCodeSection').style.display = 'block';
+        document.getElementById('syncDesktopToCodeBtn').style.display = 'inline-block';
+      } else {
+        document.getElementById('desktopToCodeSection').style.display = 'none';
+      }
+
+      // Code to Desktop section
+      if (onlyInCode.length > 0) {
+        let html = '';
+        onlyInCode.forEach(serverName => {
+          const server = codeServers[serverName];
+          html += '<div style="margin-bottom: 12px; padding: 12px; background: white; border-radius: 5px; border: 1px solid #f3e5f5;">';
+          html += '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">';
+          html += '<input type="checkbox" id="code-to-desktop-' + escapeHtml(serverName) + '" checked style="width: 18px; height: 18px;">';
+          html += '<label for="code-to-desktop-' + escapeHtml(serverName) + '" style="font-weight: bold; color: #6a1b9a; cursor: pointer; flex: 1;">' + escapeHtml(serverName) + '</label>';
+          html += '</div>';
+          html += '<pre style="background: #f9f9f9; padding: 8px; border-radius: 4px; font-size: 11px; margin: 0; overflow-x: auto; max-height: 150px;"><code>' + escapeHtml(JSON.stringify(server, null, 2)) + '</code></pre>';
+          html += '</div>';
+        });
+        document.getElementById('codeOnlyServers').innerHTML = html;
+        document.getElementById('codeToDesktopSection').style.display = 'block';
+        document.getElementById('syncCodeToDesktopBtn').style.display = 'inline-block';
+      } else {
+        document.getElementById('codeToDesktopSection').style.display = 'none';
+      }
+
+      // Common servers section
+      if (commonServers.length > 0) {
+        let html = '<p style="margin: 0; color: #2e7d32; font-size: 14px;">';
+        html += commonServers.join(', ');
+        html += '</p>';
+        document.getElementById('commonServers').innerHTML = html;
+        document.getElementById('commonServersSection').style.display = 'block';
+      } else {
+        document.getElementById('commonServersSection').style.display = 'none';
+      }
+
+      document.getElementById('syncActions').style.display = 'block';
+    }
+
+    async function syncDesktopToCode() {
+      if (!codeConfigData || !desktopConfigData) {
+        showError('먼저 설정 파일을 불러오세요');
+        return;
+      }
+
+      if (!window.electronAPI || !window.electronAPI.saveClaudeConfig) {
+        showError('Claude Config 저장은 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      // Collect selected servers
+      const selectedServers = {};
+      const desktopServers = desktopConfigData.mcpServers || {};
+      const desktopKeys = Object.keys(desktopServers);
+
+      desktopKeys.forEach(serverName => {
+        const checkbox = document.getElementById('desktop-to-code-' + serverName);
+        if (checkbox && checkbox.checked) {
+          selectedServers[serverName] = desktopServers[serverName];
+        }
+      });
+
+      if (Object.keys(selectedServers).length === 0) {
+        showError('추가할 서버를 선택하세요');
+        return;
+      }
+
+      // Get Code servers from projects
+      const projects = codeConfigData.projects || {};
+      const homeDir = Object.keys(projects).find(key =>
+        key.match(/^\/Users\/[^\/]+$/) ||
+        key.match(/^\/home\/[^\/]+$/) ||
+        key.match(/^[A-Z]:\\Users\\[^\\]+$/)
+      );
+
+      if (!homeDir) {
+        showError('홈 디렉토리를 찾을 수 없습니다');
+        return;
+      }
+
+      // Initialize mcpServers if needed
+      if (!codeConfigData.projects[homeDir]) {
+        codeConfigData.projects[homeDir] = {};
+      }
+      if (!codeConfigData.projects[homeDir].mcpServers) {
+        codeConfigData.projects[homeDir].mcpServers = {};
+      }
+
+      // Add selected servers to Code config
+      Object.assign(codeConfigData.projects[homeDir].mcpServers, selectedServers);
+
+      // Save the config
+      const saveResult = await window.electronAPI.saveClaudeConfig({
+        path: codeConfigPath,
+        data: codeConfigData
+      });
+
+      if (saveResult.success) {
+        // Show success message
+        const tempMessage = document.createElement('div');
+        tempMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; animation: fadeIn 0.3s;';
+        tempMessage.textContent = '✓ ' + Object.keys(selectedServers).length + '개 서버를 Claude Code에 추가했습니다';
+        document.body.appendChild(tempMessage);
+
+        setTimeout(() => {
+          tempMessage.style.animation = 'fadeOut 0.3s';
+          setTimeout(() => {
+            document.body.removeChild(tempMessage);
+          }, 300);
+        }, 3000);
+
+        // Reload configs
+        await loadBothConfigs();
+      } else {
+        showError('저장 실패: ' + saveResult.error);
+      }
+    }
+
+    async function syncCodeToDesktop() {
+      if (!codeConfigData || !desktopConfigData) {
+        showError('먼저 설정 파일을 불러오세요');
+        return;
+      }
+
+      if (!window.electronAPI || !window.electronAPI.saveClaudeConfig) {
+        showError('Claude Desktop Config 저장은 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      // Get Code servers from projects
+      const projects = codeConfigData.projects || {};
+      const homeDir = Object.keys(projects).find(key =>
+        key.match(/^\/Users\/[^\/]+$/) ||
+        key.match(/^\/home\/[^\/]+$/) ||
+        key.match(/^[A-Z]:\\Users\\[^\\]+$/)
+      );
+
+      const codeServers = (homeDir && projects[homeDir] && projects[homeDir].mcpServers) || {};
+
+      // Collect selected servers
+      const selectedServers = {};
+      const codeKeys = Object.keys(codeServers);
+
+      codeKeys.forEach(serverName => {
+        const checkbox = document.getElementById('code-to-desktop-' + serverName);
+        if (checkbox && checkbox.checked) {
+          selectedServers[serverName] = codeServers[serverName];
+        }
+      });
+
+      if (Object.keys(selectedServers).length === 0) {
+        showError('추가할 서버를 선택하세요');
+        return;
+      }
+
+      // Initialize mcpServers if needed
+      if (!desktopConfigData.mcpServers) {
+        desktopConfigData.mcpServers = {};
+      }
+
+      // Add selected servers to Desktop config
+      Object.assign(desktopConfigData.mcpServers, selectedServers);
+
+      // Save the config
+      const saveResult = await window.electronAPI.saveClaudeConfig({
+        path: desktopConfigPath,
+        data: desktopConfigData
+      });
+
+      if (saveResult.success) {
+        // Show success message
+        const tempMessage = document.createElement('div');
+        tempMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; animation: fadeIn 0.3s;';
+        tempMessage.textContent = '✓ ' + Object.keys(selectedServers).length + '개 서버를 Claude Desktop에 추가했습니다';
+        document.body.appendChild(tempMessage);
+
+        setTimeout(() => {
+          tempMessage.style.animation = 'fadeOut 0.3s';
+          setTimeout(() => {
+            document.body.removeChild(tempMessage);
+          }, 300);
+        }, 3000);
+
+        // Reload configs
+        await loadBothConfigs();
+      } else {
+        showError('저장 실패: ' + saveResult.error);
+      }
+    }
+
+    async function syncToClaudeCode() {
+      if (!codeConfigData || !desktopConfigData) {
+        showError('먼저 설정 파일을 불러오세요');
+        return;
+      }
+
+      if (!window.electronAPI || !window.electronAPI.saveClaudeConfig) {
+        showError('Claude Config 저장은 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      // Collect selected servers
+      const selectedServers = {};
+      const desktopServers = desktopConfigData.mcpServers || {};
+
+      missingServers.forEach(serverName => {
+        const checkbox = document.getElementById('sync-' + serverName);
+        if (checkbox && checkbox.checked) {
+          selectedServers[serverName] = desktopServers[serverName];
+        }
+      });
+
+      if (Object.keys(selectedServers).length === 0) {
+        showError('추가할 서버를 선택하세요');
+        return;
+      }
+
+      try {
+        // Find the user directory key in projects object
+        const projects = codeConfigData.projects || {};
+        const homeDir = Object.keys(projects).find(key =>
+          key.match(/^\/Users\/[^\/]+$/) ||
+          key.match(/^\/home\/[^\/]+$/) ||
+          key.match(/^[A-Z]:\\Users\\[^\\]+$/)
+        );
+
+        if (!homeDir) {
+          showError('홈 디렉토리를 찾을 수 없습니다');
+          return;
+        }
+
+        // Merge servers
+        if (!codeConfigData.projects[homeDir]) {
+          codeConfigData.projects[homeDir] = {};
+        }
+        if (!codeConfigData.projects[homeDir].mcpServers) {
+          codeConfigData.projects[homeDir].mcpServers = {};
+        }
+
+        // Add selected servers
+        Object.keys(selectedServers).forEach(serverName => {
+          codeConfigData.projects[homeDir].mcpServers[serverName] = selectedServers[serverName];
+        });
+
+        // Save the config
+        const saveResult = await window.electronAPI.saveClaudeConfig({
+          path: codeConfigPath,
+          data: codeConfigData
+        });
+
+        if (saveResult.success) {
+          // Show success message
+          const tempMessage = document.createElement('div');
+          tempMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; animation: fadeIn 0.3s;';
+          tempMessage.textContent = '✓ ' + Object.keys(selectedServers).length + '개 서버를 Claude Code에 추가했습니다';
+          document.body.appendChild(tempMessage);
+
+          setTimeout(() => {
+            tempMessage.style.animation = 'fadeOut 0.3s';
+            setTimeout(() => {
+              document.body.removeChild(tempMessage);
+            }, 300);
+          }, 3000);
+
+          // Reload both configs to show updated state
+          setTimeout(() => {
+            loadBothConfigs();
+          }, 500);
+
+        } else {
+          showError('파일 저장 실패: ' + saveResult.error);
+        }
+
+      } catch (error) {
+        showError('오류: ' + error.message);
+      }
+    }
+
+    // Extensions Sync functions
+    async function scanExtensions() {
+      try {
+        const response = await fetch('/api/scan-extensions');
+        const result = await response.json();
+
+        if (result.success) {
+          scannedExtensions = result.extensions || [];
+          document.getElementById('extensionsCount').textContent = result.count || 0;
+
+          if (scannedExtensions.length === 0) {
+            showError(result.message || 'Extensions를 찾을 수 없습니다');
+            return;
+          }
+
+          // Display extensions list
+          displayExtensionsList(scannedExtensions);
+
+          // Show the extensions section
+          document.getElementById('extensionsSection').style.display = 'block';
+
+        } else {
+          showError('Extensions 스캔 실패: ' + result.error);
+        }
+      } catch (error) {
+        showError('오류: ' + error.message);
+      }
+    }
+
+    function displayExtensionsList(extensions) {
+      const listDiv = document.getElementById('extensionsList');
+
+      let html = '<div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">';
+      html += '<p style="margin: 0 0 15px 0; font-weight: bold; color: #667eea;">발견된 Extensions:</p>';
+
+      html += '<div style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #2196F3;">';
+      html += '<p style="margin: 0; color: #1565c0; font-size: 13px;">💡 <strong>안내:</strong> Claude Desktop Extensions는 자동으로 실행되며, Claude Desktop의 "Local MCP servers"에 표시됩니다. ';
+      html += 'Extensions Sync는 이러한 Extensions를 Claude Code에서도 사용할 수 있도록 MCP 서버 설정으로 변환하여 추가합니다.</p>';
+      html += '</div>';
+
+      extensions.forEach((ext, index) => {
+        html += '<div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 8px; border: 2px solid #e0e0e0; cursor: pointer; transition: all 0.3s;" onclick="selectExtension(' + index + ')" onmouseover="this.style.borderColor=\'#667eea\'" onmouseout="this.style.borderColor=\'#e0e0e0\'">';
+        html += '<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">';
+        html += '<div style="display: flex; align-items: center; gap: 8px;">';
+        html += '<h4 style="margin: 0; color: #667eea;">' + escapeHtml(ext.displayName) + '</h4>';
+        html += '<span style="background: #4CAF50; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: bold;">Extension</span>';
+        html += '</div>';
+        html += '<span style="background: #667eea; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">' + escapeHtml(ext.version) + '</span>';
+        html += '</div>';
+        html += '<p style="margin: 5px 0; color: #666; font-size: 14px;">' + escapeHtml(ext.description) + '</p>';
+        if (ext.author && ext.author.name) {
+          html += '<p style="margin: 5px 0; color: #999; font-size: 12px;">작성자: ' + escapeHtml(ext.author.name) + '</p>';
+        }
+        if (ext.tools && ext.tools.length > 0) {
+          html += '<p style="margin: 5px 0; color: #999; font-size: 12px;">제공 도구: ' + ext.tools.length + '개</p>';
+        }
+        html += '<p style="margin: 5px 0; color: #4CAF50; font-size: 12px; font-weight: bold;">✓ Claude Desktop에서 실행 중</p>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+      listDiv.innerHTML = html;
+    }
+
+    async function selectExtension(index) {
+      selectedExtension = scannedExtensions[index];
+
+      if (!selectedExtension) {
+        showError('Extension을 찾을 수 없습니다');
+        return;
+      }
+
+      // Show extension details
+      let infoHtml = '<p style="margin: 5px 0; color: #856404;"><strong>이름:</strong> ' + escapeHtml(selectedExtension.displayName) + '</p>';
+      infoHtml += '<p style="margin: 5px 0; color: #856404;"><strong>버전:</strong> ' + escapeHtml(selectedExtension.version) + '</p>';
+      infoHtml += '<p style="margin: 5px 0; color: #856404;"><strong>경로:</strong> ' + escapeHtml(selectedExtension.path) + '</p>';
+
+      document.getElementById('extensionInfo').innerHTML = infoHtml;
+
+      // Convert extension to MCP config without credentials sharing
+      try {
+        const response = await fetch('/api/extension-to-mcp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            extension: selectedExtension,
+            shareCredentials: false // Do not share credentials with Claude Desktop
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          generatedMcpConfig = result.mcpConfig;
+
+          // Display MCP config preview
+          document.getElementById('mcpConfigDisplay').value = JSON.stringify({
+            [selectedExtension.name]: generatedMcpConfig
+          }, null, 2);
+
+          // Show user config section if needed
+          if (result.requiresUserConfig) {
+            displayUserConfigFields(result.userConfigFields);
+            document.getElementById('userConfigSection').style.display = 'block';
+
+            // Auto-fill from loaded env file if available
+            if (loadedEnvData) {
+              autoFillUserConfigFromEnv(loadedEnvData);
+            }
+          } else {
+            document.getElementById('userConfigSection').style.display = 'none';
+          }
+
+          // Show the details section
+          document.getElementById('selectedExtensionDetails').style.display = 'block';
+
+        } else {
+          showError('MCP 설정 변환 실패: ' + result.error);
+        }
+      } catch (error) {
+        showError('오류: ' + error.message);
+      }
+    }
+
+
+    function displayUserConfigFields(userConfig) {
+      const fieldsDiv = document.getElementById('userConfigFields');
+
+      let html = '<p style="margin: 0 0 10px 0; font-weight: bold; color: #667eea;">필요한 환경 변수:</p>';
+
+      Object.keys(userConfig).forEach(key => {
+        const field = userConfig[key];
+        const fieldId = 'env_' + key.replace(/[^a-zA-Z0-9]/g, '_');
+
+        html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 5px; border: 1px solid #e0e0e0;">';
+        html += '<label for="' + fieldId + '" style="display: block; margin-bottom: 5px;">';
+        html += '<span style="font-weight: bold; color: #667eea;">' + escapeHtml(key) + '</span>';
+        if (field.required) {
+          html += ' <span style="color: #f44336; font-size: 11px;">*필수</span>';
+        }
+        html += '</label>';
+
+        if (field.title) {
+          html += '<p style="margin: 0 0 5px 0; color: #666; font-size: 13px;">' + escapeHtml(field.title) + '</p>';
+        }
+        if (field.description) {
+          html += '<p style="margin: 0 0 8px 0; color: #999; font-size: 12px;">' + escapeHtml(field.description) + '</p>';
+        }
+
+        // Add input field based on type with onchange event
+        if (field.type === 'boolean') {
+          const defaultValue = field.default || false;
+          html += '<label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">';
+          html += '<input type="checkbox" id="' + fieldId + '" ' + (defaultValue ? 'checked' : '') + ' onchange="updateMcpConfigPreview()" style="width: 18px; height: 18px;">';
+          html += '<span style="font-size: 13px;">활성화</span>';
+          html += '</label>';
+        } else if (field.type === 'number') {
+          const defaultValue = field.default || '';
+          html += '<input type="number" id="' + fieldId + '" value="' + escapeHtml(String(defaultValue)) + '" placeholder="숫자 입력" oninput="updateMcpConfigPreview()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">';
+        } else if (field.type === 'file') {
+          html += '<input type="text" id="' + fieldId + '" placeholder="파일 경로 입력 (예: /path/to/file.json)" oninput="updateMcpConfigPreview()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">';
+        } else {
+          // string type
+          const defaultValue = field.default || '';
+          const placeholder = field.required ? '필수 입력' : '선택 입력';
+          html += '<input type="text" id="' + fieldId + '" value="' + escapeHtml(String(defaultValue)) + '" placeholder="' + placeholder + '" oninput="updateMcpConfigPreview()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">';
+        }
+
+        html += '</div>';
+      });
+
+      fieldsDiv.innerHTML = html;
+
+      // Add onchange listener to account identifier
+      const accountIdInput = document.getElementById('accountIdentifier');
+      if (accountIdInput) {
+        accountIdInput.oninput = updateMcpConfigPreview;
+      }
+    }
+
+    function collectUserConfigValues() {
+      if (!selectedExtension || !selectedExtension.userConfig) {
+        return {};
+      }
+
+      const envValues = {};
+      const userConfig = selectedExtension.userConfig;
+
+      Object.keys(userConfig).forEach(key => {
+        const field = userConfig[key];
+        const fieldId = 'env_' + key.replace(/[^a-zA-Z0-9]/g, '_');
+        const inputElement = document.getElementById(fieldId);
+
+        if (inputElement) {
+          if (field.type === 'boolean') {
+            envValues[key] = inputElement.checked ? 'true' : 'false';
+          } else if (field.type === 'number') {
+            const value = inputElement.value.trim();
+            if (value) {
+              envValues[key] = value;
+            }
+          } else {
+            const value = inputElement.value.trim();
+            if (value) {
+              envValues[key] = value;
+            }
+          }
+        }
+      });
+
+      return envValues;
+    }
+
+    async function addExtensionToClaudeCode() {
+      if (!selectedExtension || !generatedMcpConfig) {
+        showError('먼저 Extension을 선택하세요');
+        return;
+      }
+
+      if (!window.electronAPI || !window.electronAPI.loadClaudeConfig || !window.electronAPI.saveClaudeConfig) {
+        showError('Extension 추가는 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      try {
+        // Get account identifier
+        const accountIdentifier = document.getElementById('accountIdentifier').value.trim();
+
+        // Generate server name with account identifier
+        let serverName = selectedExtension.name;
+        if (accountIdentifier) {
+          serverName = selectedExtension.name + '-' + accountIdentifier;
+        }
+
+        // If we have a client secret file that needs to be saved
+        if (loadedEnvData && loadedEnvData._isClientSecret && loadedEnvData._originalData) {
+          try {
+            const saveResponse = await fetch('/api/save-client-secret', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                clientSecretData: loadedEnvData._originalData,
+                accountId: accountIdentifier || 'default'
+              })
+            });
+
+            const saveResult = await saveResponse.json();
+
+            if (saveResult.success) {
+              console.log('Client secret saved to:', saveResult.path);
+              // Update GOOGLE_CLIENT_SECRET_PATH with the saved file path
+              loadedEnvData.GOOGLE_CLIENT_SECRET_PATH = saveResult.path;
+            } else {
+              showError('Client secret 파일 저장 실패: ' + saveResult.error);
+              return;
+            }
+          } catch (error) {
+            showError('Client secret 파일 저장 오류: ' + error.message);
+            return;
+          }
+        }
+
+        // Collect user-provided environment variables
+        const userEnvValues = collectUserConfigValues();
+
+        // Merge user values with generated config
+        const finalMcpConfig = JSON.parse(JSON.stringify(generatedMcpConfig)); // Deep clone
+
+        if (Object.keys(userEnvValues).length > 0) {
+          if (!finalMcpConfig.env) {
+            finalMcpConfig.env = {};
+          }
+          // Add user-provided env values
+          Object.assign(finalMcpConfig.env, userEnvValues);
+        }
+
+        // Load Claude Code config
+        const loadResult = await window.electronAPI.loadClaudeConfig();
+
+        if (!loadResult.success) {
+          showError('Claude Code 설정 불러오기 실패: ' + loadResult.error);
+          return;
+        }
+
+        const config = loadResult.data;
+
+        // Find the user directory key in projects object
+        const projects = config.projects || {};
+        const homeDir = Object.keys(projects).find(key =>
+          key.match(/^\/Users\/[^\/]+$/) ||
+          key.match(/^\/home\/[^\/]+$/) ||
+          key.match(/^[A-Z]:\\Users\\[^\\]+$/)
+        );
+
+        if (!homeDir) {
+          showError('홈 디렉토리를 찾을 수 없습니다');
+          return;
+        }
+
+        // Initialize mcpServers if needed
+        if (!config.projects[homeDir]) {
+          config.projects[homeDir] = {};
+        }
+        if (!config.projects[homeDir].mcpServers) {
+          config.projects[homeDir].mcpServers = {};
+        }
+
+        const mcpServers = config.projects[homeDir].mcpServers;
+
+        // Check if server already exists
+        if (mcpServers[serverName]) {
+          if (!confirm('이미 "' + serverName + '" 서버가 존재합니다. 덮어쓰시겠습니까?')) {
+            return;
+          }
+        }
+
+        // Auto-assign port for workspace-mcp servers
+        if (selectedExtension.name === 'workspace-mcp' && finalMcpConfig.env && finalMcpConfig.env.WORKSPACE_MCP_PORT) {
+          // Find the highest used port for workspace-mcp servers
+          let maxPort = 7999; // Start from 7999 so first port will be 8000
+          Object.keys(mcpServers).forEach(name => {
+            if (name.startsWith('workspace-mcp')) {
+              const server = mcpServers[name];
+              if (server.env && server.env.WORKSPACE_MCP_PORT) {
+                const port = parseInt(server.env.WORKSPACE_MCP_PORT);
+                if (!isNaN(port) && port > maxPort) {
+                  maxPort = port;
+                }
+              }
+            }
+          });
+
+          // Assign next available port
+          finalMcpConfig.env.WORKSPACE_MCP_PORT = (maxPort + 1).toString();
+          console.log('Auto-assigned port:', finalMcpConfig.env.WORKSPACE_MCP_PORT, 'for server:', serverName);
+        }
+
+        // Add the extension as MCP server with user-provided env values
+        mcpServers[serverName] = finalMcpConfig;
+
+        // Save the config
+        const saveResult = await window.electronAPI.saveClaudeConfig({
+          path: loadResult.path,
+          data: config
+        });
+
+        if (saveResult.success) {
+          // Show success message with detailed info
+          const tempMessage = document.createElement('div');
+          tempMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 20px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; animation: fadeIn 0.3s; max-width: 450px;';
+
+          let messageHtml = '<div style="font-weight: bold; margin-bottom: 8px;">✓ Extension이 Claude Code에 추가되었습니다!</div>' +
+            '<div style="font-size: 13px; opacity: 0.95;">Extension: ' + escapeHtml(selectedExtension.displayName) + '</div>' +
+            '<div style="font-size: 13px; opacity: 0.95; margin-top: 5px;">서버 이름: <strong>' + escapeHtml(serverName) + '</strong></div>';
+
+          // Show port info if available
+          if (finalMcpConfig.env && finalMcpConfig.env.WORKSPACE_MCP_PORT) {
+            messageHtml += '<div style="font-size: 13px; opacity: 0.95; margin-top: 5px;">포트: <strong>' + escapeHtml(finalMcpConfig.env.WORKSPACE_MCP_PORT) + '</strong></div>';
+          }
+
+          messageHtml += '<div style="font-size: 12px; opacity: 0.9; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.3);">' +
+            '💡 Claude Desktop에서는 Extension으로 실행되고,<br>Claude Code에서는 MCP 서버로 실행됩니다.</div>';
+
+          tempMessage.innerHTML = messageHtml;
+          document.body.appendChild(tempMessage);
+
+          setTimeout(() => {
+            tempMessage.style.animation = 'fadeOut 0.3s';
+            setTimeout(() => {
+              document.body.removeChild(tempMessage);
+            }, 300);
+          }, 5000);
+
+          // Reset selection and clear account identifier
+          selectedExtension = null;
+          generatedMcpConfig = null;
+          document.getElementById('selectedExtensionDetails').style.display = 'none';
+          document.getElementById('accountIdentifier').value = '';
+
+        } else {
+          showError('파일 저장 실패: ' + saveResult.error);
+        }
+
+      } catch (error) {
+        showError('오류: ' + error.message);
+      }
+    }
+
+    // Show installed extensions management
+    async function showInstalledExtensions() {
+      if (!window.electronAPI || !window.electronAPI.loadClaudeConfig) {
+        showError('설치된 Extension 관리는 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      try {
+        // Load Claude Code config
+        const loadResult = await window.electronAPI.loadClaudeConfig();
+
+        if (!loadResult.success) {
+          showError('Claude Code 설정 불러오기 실패: ' + loadResult.error);
+          return;
+        }
+
+        const config = loadResult.data;
+        const projects = config.projects || {};
+        const homeDir = Object.keys(projects).find(key =>
+          key.match(/^\/Users\/[^\/]+$/) ||
+          key.match(/^\/home\/[^\/]+$/) ||
+          key.match(/^[A-Z]:\\Users\\[^\\]+$/)
+        );
+
+        if (!homeDir || !projects[homeDir] || !projects[homeDir].mcpServers) {
+          showError('설치된 MCP 서버를 찾을 수 없습니다');
+          return;
+        }
+
+        const mcpServers = projects[homeDir].mcpServers;
+        const extensionsPath = '/Users/gwanli/Library/Application Support/Claude/Claude Extensions';
+
+        // Filter servers that are Extensions (based on path)
+        const installedExtensions = [];
+        Object.keys(mcpServers).forEach(serverName => {
+          const server = mcpServers[serverName];
+          // Check if args contain extension path
+          const isExtension = server.args && server.args.some(arg =>
+            typeof arg === 'string' && arg.includes('Claude Extensions')
+          );
+
+          if (isExtension) {
+            installedExtensions.push({
+              name: serverName,
+              config: server
+            });
+          }
+        });
+
+        // Display installed extensions
+        displayInstalledExtensions(installedExtensions, loadResult.path);
+
+        // Show the section
+        document.getElementById('installedExtensionsSection').style.display = 'block';
+
+        // Scroll to section
+        document.getElementById('installedExtensionsSection').scrollIntoView({ behavior: 'smooth' });
+
+      } catch (error) {
+        showError('오류: ' + error.message);
+      }
+    }
+
+    function displayInstalledExtensions(extensions, configPath) {
+      const listDiv = document.getElementById('installedExtensionsList');
+
+      if (extensions.length === 0) {
+        listDiv.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">설치된 Extension이 없습니다.</p>';
+        return;
+      }
+
+      let html = '<p style="margin: 0 0 15px 0; color: #666;">총 <strong>' + extensions.length + '개</strong>의 Extension이 설치되어 있습니다.</p>';
+
+      extensions.forEach((ext, index) => {
+        html += '<div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e0e0e0;">';
+        html += '<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">';
+        html += '<div>';
+        html += '<h4 style="margin: 0 0 5px 0; color: #667eea;">' + escapeHtml(ext.name) + '</h4>';
+        html += '<p style="margin: 0; font-size: 12px; color: #999;">Command: ' + escapeHtml(ext.config.command) + '</p>';
+
+        // Show port info if available
+        if (ext.config.env && ext.config.env.WORKSPACE_MCP_PORT) {
+          html += '<p style="margin: 5px 0 0 0; font-size: 12px; color: #FF9800;"><strong>포트:</strong> ' + escapeHtml(ext.config.env.WORKSPACE_MCP_PORT) + '</p>';
+        }
+
+        // Show account email if available
+        if (ext.config.env && ext.config.env.USER_GOOGLE_EMAIL) {
+          html += '<p style="margin: 5px 0 0 0; font-size: 12px; color: #4CAF50;"><strong>계정:</strong> ' + escapeHtml(ext.config.env.USER_GOOGLE_EMAIL) + '</p>';
+        }
+
+        html += '</div>';
+        html += '<button onclick="removeExtension(\'' + escapeHtml(ext.name) + '\', \'' + escapeHtml(configPath) + '\')" style="background: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 13px; transition: background 0.3s;" onmouseover="this.style.background=\'#d32f2f\'" onmouseout="this.style.background=\'#f44336\'">🗑️ 제거</button>';
+        html += '</div>';
+
+        // Show environment variables if any
+        if (ext.config.env && Object.keys(ext.config.env).length > 0) {
+          html += '<details style="margin-top: 10px;">';
+          html += '<summary style="cursor: pointer; color: #667eea; font-size: 13px; font-weight: bold;">환경 변수 보기</summary>';
+          html += '<div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 5px; font-size: 12px;">';
+          Object.keys(ext.config.env).forEach(key => {
+            const value = ext.config.env[key];
+            const displayValue = value.length > 50 ? value.substring(0, 50) + '...' : value;
+            html += '<p style="margin: 5px 0;"><strong>' + escapeHtml(key) + ':</strong> ' + escapeHtml(displayValue) + '</p>';
+          });
+          html += '</div>';
+          html += '</details>';
+        }
+
+        html += '</div>';
+      });
+
+      listDiv.innerHTML = html;
+    }
+
+    async function removeExtension(extensionName, configPath) {
+      if (!confirm('Extension "' + extensionName + '"을(를) Claude Code에서 제거하시겠습니까?\n\n주의: Claude Desktop Extensions 폴더의 파일은 삭제되지 않으며, Claude Code 설정에서만 제거됩니다.')) {
+        return;
+      }
+
+      if (!window.electronAPI || !window.electronAPI.loadClaudeConfig || !window.electronAPI.saveClaudeConfig) {
+        showError('Extension 제거는 Electron 앱에서만 사용할 수 있습니다.');
+        return;
+      }
+
+      try {
+        // Load Claude Code config
+        const loadResult = await window.electronAPI.loadClaudeConfig();
+
+        if (!loadResult.success) {
+          showError('Claude Code 설정 불러오기 실패: ' + loadResult.error);
+          return;
+        }
+
+        const config = loadResult.data;
+        const projects = config.projects || {};
+        const homeDir = Object.keys(projects).find(key =>
+          key.match(/^\/Users\/[^\/]+$/) ||
+          key.match(/^\/home\/[^\/]+$/) ||
+          key.match(/^[A-Z]:\\Users\\[^\\]+$/)
+        );
+
+        if (!homeDir || !projects[homeDir] || !projects[homeDir].mcpServers) {
+          showError('MCP 서버 설정을 찾을 수 없습니다');
+          return;
+        }
+
+        // Remove the extension
+        if (config.projects[homeDir].mcpServers[extensionName]) {
+          delete config.projects[homeDir].mcpServers[extensionName];
+
+          // Save the config
+          const saveResult = await window.electronAPI.saveClaudeConfig({
+            path: loadResult.path,
+            data: config
+          });
+
+          if (saveResult.success) {
+            // Show success message
+            const tempMessage = document.createElement('div');
+            tempMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; animation: fadeIn 0.3s;';
+            tempMessage.textContent = '✓ Extension "' + extensionName + '"이(가) Claude Code에서 제거되었습니다!';
+            document.body.appendChild(tempMessage);
+
+            setTimeout(() => {
+              tempMessage.style.animation = 'fadeOut 0.3s';
+              setTimeout(() => {
+                document.body.removeChild(tempMessage);
+              }, 300);
+            }, 3000);
+
+            // Refresh the list
+            showInstalledExtensions();
+
+          } else {
+            showError('파일 저장 실패: ' + saveResult.error);
+          }
+        } else {
+          showError('Extension을 찾을 수 없습니다');
+        }
+
+      } catch (error) {
+        showError('오류: ' + error.message);
       }
     }
   </script>
